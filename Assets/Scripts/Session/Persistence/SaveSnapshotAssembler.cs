@@ -143,6 +143,18 @@ public class SaveSnapshotAssembler
 
         ShopWalletSnapshot snapshot = ShopService.Instance.ExportSnapshot();
         shopData.Points = snapshot.Points;
+        ShopBuyPriceSnapshot[] buyPriceSnapshots = snapshot.BuyPriceSnapshots ?? Array.Empty<ShopBuyPriceSnapshot>();
+        SaveShopBuyPriceData[] mappedSnapshots = new SaveShopBuyPriceData[buyPriceSnapshots.Length];
+        for (int i = 0; i < buyPriceSnapshots.Length; i++)
+        {
+            mappedSnapshots[i] = new SaveShopBuyPriceData
+            {
+                CommodityId = buyPriceSnapshots[i].CommodityId,
+                CurrentBuyPrice = buyPriceSnapshots[i].CurrentBuyPrice
+            };
+        }
+
+        shopData.BuyPriceSnapshots = mappedSnapshots;
     }
 
     private static void EnsurePlayerInitialized()
@@ -229,9 +241,39 @@ public class SaveSnapshotAssembler
 
         ShopWalletSnapshot snapshot = new ShopWalletSnapshot
         {
-            Points = shopData != null ? shopData.Points : 0
+            Points = shopData != null ? shopData.Points : 0,
+            BuyPriceSnapshots = MapBuyPriceSnapshots(shopData)
         };
         ShopService.Instance.ApplySnapshot(snapshot);
+    }
+
+    public static ShopBuyPriceSnapshot[] MapBuyPriceSnapshots(SaveShopData shopData)
+    {
+        SaveShopBuyPriceData[] saveSnapshots = shopData != null
+            ? shopData.BuyPriceSnapshots
+            : null;
+        if (saveSnapshots == null || saveSnapshots.Length == 0)
+        {
+            return Array.Empty<ShopBuyPriceSnapshot>();
+        }
+
+        ShopBuyPriceSnapshot[] mapped = new ShopBuyPriceSnapshot[saveSnapshots.Length];
+        for (int i = 0; i < saveSnapshots.Length; i++)
+        {
+            SaveShopBuyPriceData saveSnapshot = saveSnapshots[i];
+            if (saveSnapshot == null)
+            {
+                continue;
+            }
+
+            mapped[i] = new ShopBuyPriceSnapshot
+            {
+                CommodityId = saveSnapshot.CommodityId,
+                CurrentBuyPrice = saveSnapshot.CurrentBuyPrice
+            };
+        }
+
+        return mapped;
     }
 
     private static StartGameConfig ResolveFallbackStartGameConfig()

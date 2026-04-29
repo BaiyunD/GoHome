@@ -725,6 +725,13 @@ public class UIManager : MonoBehaviour
     public void ShowResultToast(string message)
     {
         _pendingResultToastMessage = message;
+        if (EnsureResultToastModalReference() && resultToastModal.gameObject.activeInHierarchy)
+        {
+            resultToastModal.Show(string.IsNullOrWhiteSpace(_pendingResultToastMessage) ? string.Empty : _pendingResultToastMessage);
+            _pendingResultToastMessage = null;
+            return;
+        }
+
         OpenUIEntry(UIKey.ResultToastModal);
     }
 

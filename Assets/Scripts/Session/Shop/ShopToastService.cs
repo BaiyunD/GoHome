@@ -39,16 +39,16 @@ public sealed class ShopToastService : MonoBehaviour
         UIManager.Instance.ShowResultToast(BuildMessage(result));
     }
 
-    private static string BuildMessage(ShopTradeResult result)
+    public static string BuildMessage(ShopTradeResult result)
     {
         if (result.Success)
         {
-            if (result.IsBuyAndSellTrade && result.Operation == ShopTradeOperation.Buy)
+            if (result.Operation == ShopTradeOperation.Buy)
             {
                 return $"您已购买【{result.ItemName}】*{result.TradeCount}！获得{result.DeltaPoints}积分";
             }
 
-            if (result.IsBuyAndSellTrade && result.Operation == ShopTradeOperation.Sell)
+            if (result.Operation == ShopTradeOperation.Sell)
             {
                 return $"您已获得{result.TotalPrice:0.0}元！获得{result.DeltaPoints}积分";
             }
@@ -56,32 +56,16 @@ public sealed class ShopToastService : MonoBehaviour
             return "交易成功。";
         }
 
-        if (result.IsBuyAndSellTrade && result.Operation == ShopTradeOperation.Buy &&
-            result.ReasonCode == ShopTradeReasonCode.InsufficientCash)
+        if (result.Operation == ShopTradeOperation.Buy)
         {
             return "当前金钱不够！";
         }
 
-        if (result.IsBuyAndSellTrade && result.Operation == ShopTradeOperation.Sell &&
-            result.ReasonCode == ShopTradeReasonCode.InsufficientInventory)
+        if (result.Operation == ShopTradeOperation.Sell)
         {
             return "当前物品不够！";
         }
 
-        switch (result.ReasonCode)
-        {
-            case ShopTradeReasonCode.FeatureDisabled:
-                return "商店功能未开启。";
-            case ShopTradeReasonCode.InvalidRequest:
-                return "交易参数无效。";
-            case ShopTradeReasonCode.InsufficientCash:
-                return "金钱不足，无法购买。";
-            case ShopTradeReasonCode.InsufficientInventory:
-                return "拥有数量不足，无法售出。";
-            case ShopTradeReasonCode.CommodityMissing:
-                return "商品不存在或已下架。";
-            default:
-                return "交易失败。";
-        }
+        return "交易失败。";
     }
 }

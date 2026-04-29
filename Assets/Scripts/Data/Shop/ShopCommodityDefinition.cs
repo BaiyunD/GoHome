@@ -17,6 +17,7 @@ public class ShopCommodityDefinition : ScriptableObject
     [SerializeField] private float sellPrice = 0.1f;
     [SerializeField] private ShopTradePermission tradePermission = ShopTradePermission.BuyAndSell;
     [SerializeField] private bool isSellAll = true;
+    [SerializeField] private bool isPriceIncreaseOnBuy = true;
 
     public int CommodityId => commodityId;
     public int ItemId => itemId;
@@ -25,4 +26,5 @@ public class ShopCommodityDefinition : ScriptableObject
     public float SellPrice => sellPrice;
     public ShopTradePermission TradePermission => tradePermission;
     public bool IsSellAll => isSellAll;
+    public bool IsPriceIncreaseOnBuy => isPriceIncreaseOnBuy;
 }

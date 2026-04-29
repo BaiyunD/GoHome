@@ -87,21 +87,20 @@ public sealed class ShopPage : MonoBehaviour
         }
         if (detailBuyPriceText != null)
         {
-            float buyDisplayPrice = viewModel.BuyPrice;
-            if (viewModel.CanBuy && viewModel.CanSell)
-            {
-                buyDisplayPrice = viewModel.BuyPrice * viewModel.TradeCount;
-            }
+            int buyDisplayCount = viewModel.TradeCount;
+            float buyDisplayPrice = viewModel.BuyPrice * buyDisplayCount;
 
             detailBuyPriceText.text = $"购买：{buyDisplayPrice:0.0}元";
         }
         if (detailSellPriceText != null)
         {
-            float sellDisplayPrice = viewModel.SellPrice;
-            if (viewModel.CanBuy && viewModel.CanSell)
+            int sellDisplayCount = viewModel.TradeCount;
+            if (viewModel.CanSell && !viewModel.CanBuy && viewModel.IsSellAll)
             {
-                sellDisplayPrice = viewModel.SellPrice * viewModel.TradeCount;
+                sellDisplayCount = viewModel.OwnedCount;
             }
+
+            float sellDisplayPrice = viewModel.SellPrice * sellDisplayCount;
 
             detailSellPriceText.text = $"出售：{sellDisplayPrice:0.0}元";
         }

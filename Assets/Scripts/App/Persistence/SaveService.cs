@@ -78,6 +78,14 @@ public class SaveConsumableData
 public class SaveShopData
 {
     public int Points;
+    public SaveShopBuyPriceData[] BuyPriceSnapshots = Array.Empty<SaveShopBuyPriceData>();
+}
+
+[Serializable]
+public class SaveShopBuyPriceData
+{
+    public int CommodityId;
+    public float CurrentBuyPrice;
 }
 
 public interface ISaveService

@@ -239,7 +239,6 @@ public sealed class ShopPagePresenter : MonoBehaviour
             return;
         }
 
-        string fallbackMessage = result.Success ? "交易成功。" : "交易失败。";
-        UIManager.Instance.ShowResultToast(fallbackMessage);
+        UIManager.Instance.ShowResultToast(ShopToastService.BuildMessage(result));
     }
 }

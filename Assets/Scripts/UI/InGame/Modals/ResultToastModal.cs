@@ -47,14 +47,23 @@ public class ResultToastModal : MonoBehaviour
     /// </summary>
     public void Show(string message)
     {
+        string safeMessage = string.IsNullOrWhiteSpace(message) ? string.Empty : message;
         if (messageText != null)
         {
-            messageText.text = message;
+            messageText.text = safeMessage;
         }
-        isShowRequestInProgress = true;
-        gameObject.SetActive(true);
 
-        if (hideCoroutine != null) StopCoroutine(hideCoroutine);
+        isShowRequestInProgress = true;
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
+        if (hideCoroutine != null)
+        {
+            StopCoroutine(hideCoroutine);
+        }
+
         hideCoroutine = StartCoroutine(HideAfterSecondsCoroutine());
         isShowRequestInProgress = false;
     }

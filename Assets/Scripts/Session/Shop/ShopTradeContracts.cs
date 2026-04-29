@@ -29,8 +29,7 @@ public enum ShopTradeReasonCode
     InsufficientCash = 2,
     InsufficientInventory = 3,
     CommodityMissing = 4,
-    FeatureDisabled = 5,
-    NotImplemented = 6
+    FeatureDisabled = 5
 }
 
 [Serializable]
@@ -44,7 +43,6 @@ public struct ShopTradeResult
     public string ItemName;
     public int TradeCount;
     public float TotalPrice;
-    public bool IsBuyAndSellTrade;
     public ShopTradeOperation Operation;
 }
 

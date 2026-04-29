@@ -18,6 +18,7 @@ public sealed class ShopService : MonoBehaviour
     private IShopPointsPolicy _pointsPolicy = new DecimalPricePointsPolicy();
     private IShopTransactionPolicy _transactionPolicy = new DefaultShopTransactionPolicy();
     private readonly Dictionary<int, ShopCommodityDefinition> _commoditiesById = new Dictionary<int, ShopCommodityDefinition>();
+    private readonly Dictionary<int, float> _runtimeBuyPrices = new Dictionary<int, float>();
 
     public bool IsFeatureEnabled => shopFeatureEnabled;
 
@@ -48,18 +49,48 @@ public sealed class ShopService : MonoBehaviour
     public void InitializeForNewGame()
     {
         _wallet.InitializeForNewGame();
+        _runtimeBuyPrices.Clear();
         NotifyStateChanged();
     }
 
     public void ApplySnapshot(ShopWalletSnapshot snapshot)
     {
         _wallet.ApplySnapshot(snapshot);
+        _runtimeBuyPrices.Clear();
+        ShopBuyPriceSnapshot[] priceSnapshots = snapshot.BuyPriceSnapshots;
+        if (priceSnapshots != null)
+        {
+            for (int i = 0; i < priceSnapshots.Length; i++)
+            {
+                ShopBuyPriceSnapshot priceSnapshot = priceSnapshots[i];
+                if (priceSnapshot.CommodityId <= 0)
+                {
+                    continue;
+                }
+
+                _runtimeBuyPrices[priceSnapshot.CommodityId] = NormalizeMoney(priceSnapshot.CurrentBuyPrice);
+            }
+        }
+
         NotifyStateChanged();
     }
 
     public ShopWalletSnapshot ExportSnapshot()
     {
-        return _wallet.ExportSnapshot();
+        ShopWalletSnapshot snapshot = _wallet.ExportSnapshot();
+        ShopBuyPriceSnapshot[] priceSnapshots = new ShopBuyPriceSnapshot[_runtimeBuyPrices.Count];
+        int index = 0;
+        foreach (KeyValuePair<int, float> pair in _runtimeBuyPrices)
+        {
+            priceSnapshots[index++] = new ShopBuyPriceSnapshot
+            {
+                CommodityId = pair.Key,
+                CurrentBuyPrice = NormalizeMoney(pair.Value)
+            };
+        }
+
+        snapshot.BuyPriceSnapshots = priceSnapshots;
+        return snapshot;
     }
 
     public bool TryGetCash(out float cash)
@@ -112,7 +143,7 @@ public sealed class ShopService : MonoBehaviour
                 Icon = itemSnapshot.ItemIcon,
                 OwnedCount = itemSnapshot.OwnedCount,
                 TradeCount = commodity.TradeCount,
-                BuyPrice = commodity.BuyPrice,
+                BuyPrice = ResolveCurrentBuyPrice(commodity),
                 SellPrice = commodity.SellPrice,
                 CanBuy = canBuy,
                 CanSell = canSell,
@@ -129,28 +160,26 @@ public sealed class ShopService : MonoBehaviour
         ShopTradeOperation operation = request.Operation;
         if (!IsFeatureEnabled)
         {
-            return BuildFailure(ShopTradeReasonCode.FeatureDisabled, operation, false);
+            return BuildFailure(ShopTradeReasonCode.FeatureDisabled, operation);
         }
 
         if (!_transactionPolicy.Validate(request, out ShopTradeReasonCode reasonCode))
         {
-            return BuildFailure(reasonCode, operation, false);
+            return BuildFailure(reasonCode, operation);
         }
 
         if (!_commoditiesById.TryGetValue(request.CommodityId, out ShopCommodityDefinition commodity) || commodity == null)
         {
-            return BuildFailure(ShopTradeReasonCode.CommodityMissing, operation, false);
+            return BuildFailure(ShopTradeReasonCode.CommodityMissing, operation);
         }
 
         bool canBuy = commodity.TradePermission == ShopTradePermission.BuyAndSell
             || commodity.TradePermission == ShopTradePermission.BuyOnly;
         bool canSell = commodity.TradePermission == ShopTradePermission.BuyAndSell
             || commodity.TradePermission == ShopTradePermission.SellOnly;
-        bool isBuyAndSellTrade = commodity.TradePermission == ShopTradePermission.BuyAndSell;
-
         int itemId = commodity.ItemId;
         int tradeCount = commodity.TradeCount;
-        float buyPricePerUnit = commodity.BuyPrice;
+        float buyPricePerUnit = ResolveCurrentBuyPrice(commodity);
         float sellPricePerUnit = commodity.SellPrice;
         string itemName = ResolveItemName(itemId);
 
@@ -159,34 +188,35 @@ public sealed class ShopService : MonoBehaviour
             case ShopTradeOperation.Buy:
                 if (!canBuy)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation);
                 }
 
                 if (tradeCount <= 0 || request.Times <= 0)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation);
                 }
 
                 int buyCount = tradeCount * request.Times;
-                float buyTotalPrice = buyPricePerUnit * buyCount;
+                float buyTotalPrice = NormalizeMoney(buyPricePerUnit * buyCount);
                 if (PlayerResourceService.Instance == null)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation);
                 }
 
                 if (!PlayerResourceService.Instance.TrySpendMoney(buyTotalPrice, "ShopService.ExecuteTrade.Buy"))
                 {
-                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation);
                 }
 
                 if (InventoryManager.Instance == null)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation);
                 }
 
                 InventoryManager.Instance.AddItem(itemId, buyCount);
                 int buyPoints = CalculatePoints(buyTotalPrice);
                 _wallet.AddPoints(buyPoints);
+                ApplyBuyOnlyPriceIncreaseIfNeeded(commodity, buyPricePerUnit);
                 NotifyStateChanged();
                 return new ShopTradeResult
                 {
@@ -197,7 +227,6 @@ public sealed class ShopService : MonoBehaviour
                     ItemName = itemName,
                     TradeCount = buyCount,
                     TotalPrice = buyTotalPrice,
-                    IsBuyAndSellTrade = isBuyAndSellTrade,
                     Operation = request.Operation,
                     DeltaItems = new ShopItemDelta
                     {
@@ -209,12 +238,12 @@ public sealed class ShopService : MonoBehaviour
             case ShopTradeOperation.Sell:
                 if (!canSell)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation);
                 }
 
                 if (InventoryManager.Instance == null)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation);
                 }
 
                 bool isSellOnly = commodity.TradePermission == ShopTradePermission.SellOnly;
@@ -228,7 +257,7 @@ public sealed class ShopService : MonoBehaviour
                 {
                     if (tradeCount <= 0 || request.Times <= 0)
                     {
-                        return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation, isBuyAndSellTrade);
+                        return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation);
                     }
 
                     sellCount = tradeCount * request.Times;
@@ -236,19 +265,19 @@ public sealed class ShopService : MonoBehaviour
 
                 if (sellCount <= 0)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InsufficientInventory, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InsufficientInventory, request.Operation);
                 }
 
                 int currentOwned = InventoryManager.Instance.GetItemCount(itemId);
                 if (currentOwned < sellCount)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InsufficientInventory, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InsufficientInventory, request.Operation);
                 }
 
-                float sellTotalPrice = sellPricePerUnit * sellCount;
+                float sellTotalPrice = NormalizeMoney(sellPricePerUnit * sellCount);
                 if (PlayerResourceService.Instance == null)
                 {
-                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation);
                 }
 
                 if (!PlayerResourceService.Instance.ApplyDelta(
@@ -256,7 +285,7 @@ public sealed class ShopService : MonoBehaviour
                         sellTotalPrice,
                         "ShopService.ExecuteTrade.Sell"))
                 {
-                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation, isBuyAndSellTrade);
+                    return BuildFailure(ShopTradeReasonCode.InsufficientCash, request.Operation);
                 }
 
                 InventoryManager.Instance.RemoveItem(itemId, sellCount);
@@ -272,7 +301,6 @@ public sealed class ShopService : MonoBehaviour
                     ItemName = itemName,
                     TradeCount = sellCount,
                     TotalPrice = sellTotalPrice,
-                    IsBuyAndSellTrade = isBuyAndSellTrade,
                     Operation = request.Operation,
                     DeltaItems = new ShopItemDelta
                     {
@@ -282,7 +310,7 @@ public sealed class ShopService : MonoBehaviour
                 };
 
             default:
-                return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation, isBuyAndSellTrade);
+                return BuildFailure(ShopTradeReasonCode.InvalidRequest, request.Operation);
         }
     }
 
@@ -296,7 +324,7 @@ public sealed class ShopService : MonoBehaviour
         return _pointsPolicy.CalculatePoints(pricePerTrade);
     }
 
-    private static ShopTradeResult BuildFailure(ShopTradeReasonCode reasonCode, ShopTradeOperation operation, bool isBuyAndSellTrade)
+    private static ShopTradeResult BuildFailure(ShopTradeReasonCode reasonCode, ShopTradeOperation operation)
     {
         return new ShopTradeResult
         {
@@ -308,7 +336,6 @@ public sealed class ShopService : MonoBehaviour
             ItemName = string.Empty,
             TradeCount = 0,
             TotalPrice = 0f,
-            IsBuyAndSellTrade = isBuyAndSellTrade,
             Operation = operation
         };
     }
@@ -328,5 +355,50 @@ public sealed class ShopService : MonoBehaviour
     private void NotifyStateChanged()
     {
         ShopStateChanged?.Invoke();
+    }
+
+    private float ResolveCurrentBuyPrice(ShopCommodityDefinition commodity)
+    {
+        if (commodity == null)
+        {
+            return 0f;
+        }
+
+        float basePrice = NormalizeMoney(commodity.BuyPrice);
+        if (!IsDynamicBuyPriceCommodity(commodity))
+        {
+            return basePrice;
+        }
+
+        if (_runtimeBuyPrices.TryGetValue(commodity.CommodityId, out float runtimePrice))
+        {
+            return NormalizeMoney(runtimePrice);
+        }
+
+        return basePrice;
+    }
+
+    private void ApplyBuyOnlyPriceIncreaseIfNeeded(ShopCommodityDefinition commodity, float currentUnitPrice)
+    {
+        if (!IsDynamicBuyPriceCommodity(commodity))
+        {
+            return;
+        }
+
+        float nextPrice = NormalizeMoney(currentUnitPrice + 0.2f);
+        _runtimeBuyPrices[commodity.CommodityId] = nextPrice;
+    }
+
+    private static bool IsDynamicBuyPriceCommodity(ShopCommodityDefinition commodity)
+    {
+        return commodity != null &&
+            commodity.TradePermission == ShopTradePermission.BuyOnly &&
+            commodity.IsPriceIncreaseOnBuy &&
+            commodity.CommodityId > 0;
+    }
+
+    private static float NormalizeMoney(float value)
+    {
+        return Mathf.Round(value * 10f) / 10f;
     }
 }

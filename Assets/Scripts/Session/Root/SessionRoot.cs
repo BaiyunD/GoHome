@@ -349,7 +349,8 @@ public sealed class SessionRoot : MonoBehaviour
         SaveShopData shopData = _pendingRuntimeSaveData != null ? _pendingRuntimeSaveData.Shop : null;
         ShopWalletSnapshot shopSnapshot = new ShopWalletSnapshot
         {
-            Points = shopData != null ? shopData.Points : 0
+            Points = shopData != null ? shopData.Points : 0,
+            BuyPriceSnapshots = SaveSnapshotAssembler.MapBuyPriceSnapshots(shopData)
         };
         if (ShopService.Instance != null)
         {
@@ -400,5 +401,6 @@ public sealed class SessionRoot : MonoBehaviour
 
         InventoryManager.Instance.ReplaceAllItems(mappedEntries);
     }
+
 }
 

@@ -14,6 +14,7 @@ public class ShopCommodityDefinitionEditor : Editor
         SerializedProperty sellPriceProp = serializedObject.FindProperty("sellPrice");
         SerializedProperty tradeCountProp = serializedObject.FindProperty("tradeCount");
         SerializedProperty isSellAllProp = serializedObject.FindProperty("isSellAll");
+        SerializedProperty isPriceIncreaseOnBuyProp = serializedObject.FindProperty("isPriceIncreaseOnBuy");
 
         EditorGUILayout.PropertyField(commodityIdProp);
         EditorGUILayout.PropertyField(itemIdProp);
@@ -30,6 +31,7 @@ public class ShopCommodityDefinitionEditor : Editor
         {
             EditorGUILayout.PropertyField(buyPriceProp);
             EditorGUILayout.PropertyField(tradeCountProp);
+            EditorGUILayout.PropertyField(isPriceIncreaseOnBuyProp);
         }
         else
         {

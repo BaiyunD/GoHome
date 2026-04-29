@@ -4,6 +4,14 @@ using System;
 public struct ShopWalletSnapshot
 {
     public int Points;
+    public ShopBuyPriceSnapshot[] BuyPriceSnapshots;
+}
+
+[Serializable]
+public struct ShopBuyPriceSnapshot
+{
+    public int CommodityId;
+    public float CurrentBuyPrice;
 }
 
 public sealed class ShopWallet
