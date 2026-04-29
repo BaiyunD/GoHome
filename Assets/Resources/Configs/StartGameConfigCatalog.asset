@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc600882802738243bf2de757653e64a, type: 3}
+  m_Name: StartGameConfigCatalog
+  m_EditorClassIdentifier: 
+  presets:
+  - {fileID: 11400000, guid: fecfe60d27a7ed24b99dbd55af6bb6bf, type: 2}

@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "description": "Map code changes to handbook pages for draft generation.",
+  "rules": [
+    {
+      "name": "advance-flow",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Manager/AdvanceFlowController.cs",
+      "targets": [
+        "GoHome_Docs/03_功能模块/行动与前进探索.md",
+        "GoHome_Docs/06_配置与数据/regionCode与enemyId规范与校验.md"
+      ],
+      "sectionHint": [
+        "如何修改",
+        "验证清单"
+      ],
+      "priority": 100
+    },
+    {
+      "name": "event-manager",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Manager/EventManager.cs",
+      "targets": [
+        "GoHome_Docs/03_功能模块/随机事件与遇敌中转.md",
+        "GoHome_Docs/08_常见问题/战斗与事件常见异常.md"
+      ],
+      "sectionHint": [
+        "本项目约定",
+        "如何修改"
+      ],
+      "priority": 95
+    },
+    {
+      "name": "game-event-data",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/GameEvent.cs",
+      "targets": [
+        "GoHome_Docs/06_配置与数据/事件与敌人数据_代码约束与扩展.md",
+        "GoHome_Docs/06_配置与数据/regionCode与enemyId规范与校验.md"
+      ],
+      "sectionHint": [
+        "本项目约定",
+        "常见错误与症状"
+      ],
+      "priority": 95
+    },
+    {
+      "name": "battle-manager",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Manager/BattleManager.cs",
+      "targets": [
+        "GoHome_Docs/03_功能模块/战斗与敌人数据.md",
+        "GoHome_Docs/05_UI与交互/信息刷新链路UpdateInfo.md"
+      ],
+      "sectionHint": [
+        "如何修改",
+        "验证清单"
+      ],
+      "priority": 90
+    },
+    {
+      "name": "enemy-pool",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Manager/EnemyPoolService.cs",
+      "targets": [
+        "GoHome_Docs/03_功能模块/战斗与敌人数据.md",
+        "GoHome_Docs/06_配置与数据/事件与敌人数据_编辑器配置.md"
+      ],
+      "sectionHint": [
+        "本项目约定",
+        "验证清单"
+      ],
+      "priority": 90
+    },
+    {
+      "name": "ui-manager",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Manager/UIManager.cs",
+      "targets": [
+        "GoHome_Docs/05_UI与交互/面板管理与独占策略.md",
+        "GoHome_Docs/05_UI与交互/信息刷新链路UpdateInfo.md"
+      ],
+      "sectionHint": [
+        "如何修改",
+        "常见错误与症状"
+      ],
+      "priority": 88
+    },
+    {
+      "name": "battle-panel",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/UIs/BattlePanel.cs",
+      "targets": [
+        "GoHome_Docs/05_UI与交互/Inspector绑定与严格校验.md",
+        "GoHome_Docs/03_功能模块/战斗与敌人数据.md"
+      ],
+      "sectionHint": [
+        "本项目约定",
+        "验证清单"
+      ],
+      "priority": 87
+    },
+    {
+      "name": "action-entry",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Manager/ActionManager.cs",
+      "targets": [
+        "GoHome_Docs/03_功能模块/行动与前进探索.md",
+        "GoHome_Docs/02_核心架构/模块划分/Action.md"
+      ],
+      "sectionHint": [
+        "入口链路",
+        "如何修改"
+      ],
+      "priority": 86
+    },
+    {
+      "name": "inventory-manager",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Manager/InventoryManager.cs",
+      "targets": [
+        "GoHome_Docs/03_功能模块/背包与物品注册.md",
+        "GoHome_Docs/06_配置与数据/ScriptableObject配置规范.md"
+      ],
+      "sectionHint": [
+        "如何修改",
+        "验证清单"
+      ],
+      "priority": 84
+    },
+    {
+      "name": "item-registry",
+      "matchType": "prefix",
+      "match": "Assets/Scripts/Items/PrefabItems/ItemRegistry.cs",
+      "targets": [
+        "GoHome_Docs/03_功能模块/背包与物品注册.md",
+        "GoHome_Docs/06_配置与数据/ScriptableObject配置规范.md"
+      ],
+      "sectionHint": [
+        "本项目约定",
+        "如何修改"
+      ],
+      "priority": 84
+    },
+    {
+      "name": "docs-self",
+      "matchType": "prefix",
+      "match": "GoHome_Docs/",
+      "targets": [
+        "GoHome_Docs/README.md"
+      ],
+      "sectionHint": [
+        "快速导航"
+      ],
+      "priority": 10
+    }
+  ]
+}

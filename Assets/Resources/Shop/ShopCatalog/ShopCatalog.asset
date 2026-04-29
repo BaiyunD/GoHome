@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76fd3cbe1f4326b44ba3bb71a31098da, type: 3}
+  m_Name: ShopCatalog
+  m_EditorClassIdentifier: 
+  commodities:
+  - {fileID: 11400000, guid: 1454253405e7a2f4ba7ce6f1da9b9bbd, type: 2}
+  - {fileID: 11400000, guid: f48db7dbe5ee0d746925b5109562710d, type: 2}
+  - {fileID: 11400000, guid: ee5d96ed8d80eb2498a5e10776e671f6, type: 2}
+  - {fileID: 11400000, guid: d29b55c34def4554492b679d344aeb40, type: 2}
+  - {fileID: 11400000, guid: c0525e2d831989346b55bb7b62981b92, type: 2}
+  - {fileID: 11400000, guid: 5c325918e484df840a1e553cfbaa71fc, type: 2}
+  - {fileID: 11400000, guid: 221b8ea69e936f94cae02d064399746c, type: 2}
+  - {fileID: 11400000, guid: f7571887ec271324b90ffec16f2b541f, type: 2}

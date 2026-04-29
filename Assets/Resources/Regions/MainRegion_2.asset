@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac696fbe371800c47b635e261e99e459, type: 3}
+  m_Name: MainRegion_2
+  m_EditorClassIdentifier: 
+  mainRegionId: 2
+  displayName: "\u8352\u91CE"
+  startDistance: 51
+  endDistance: 70
+  subRegions:
+  - subRegionName: "\u8349\u539F"
+    subRegionId: 0

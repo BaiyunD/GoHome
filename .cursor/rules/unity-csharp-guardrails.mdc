@@ -1,0 +1,35 @@
+---
+description: Unity C# coding guardrails (minimal, no refactors)
+globs: Assets/**/*.cs
+alwaysApply: false
+---
+
+# Unity C# 编码守则（严格最小改动）
+
+## 核心约束（默认遵守）
+
+- 只修改我明确指定的代码块；不要改动无关的类、方法、变量、注释、空行。
+- 不要重构/优化未提及的代码（包括“顺手整理”）。
+- 不要新增功能，除非我明确要求。
+- 不要删除任何现有代码（含注释/空行），除非我指定。
+
+## 命名规范
+
+- 类名：PascalCase（如 `PlayerController`）
+- 方法名：PascalCase（如 `CalculateHealth`；Unity 生命周期方法如 `Awake/Start/Update` 保持大写开头）
+- 私有字段：`_camelCase`（如 `_speed`），序列化字段用 `[SerializeField] private`，不要用 `public` 暴露字段
+- 公有属性：PascalCase（如 `Health`）
+- 局部变量：camelCase（如 `targetPosition`）
+- 常量：UPPER_SNAKE_CASE（如 `MAX_PLAYER_COUNT`）
+
+## Unity 约定
+
+- 组件获取：优先 `GetComponent`，不要为了省事用 `FindObjectOfType`。
+- 协程：协程方法名以 `Coroutine` 结尾（如 `WaitForAttackCoroutine`）。
+
+## 代码格式/禁止项
+
+- 大括号换行（Allman），缩进 4 空格（不用 Tab），每行尽量不超过 100 字符。
+- `using` 放文件顶部并按字母序排列（但：**不要因为“整理”而新增/移除 using**，除非修改内容必须）。
+- 不要重新排列类成员顺序；不要修改命名空间；不要修改任何 `.meta` 文件。
+

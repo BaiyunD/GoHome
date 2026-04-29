@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0abf906a7ebaaf84fac33437a91d88c4, type: 3}
+  m_Name: StartGameConfig_0
+  m_EditorClassIdentifier: 
+  presetId: default
+  playerTemplate: {fileID: 11400000, guid: b65c4efa989e52345a8018fc76ec28ed, type: 2}
+  startResources:
+    health: 20
+    energy: 50
+    hunger: 100
+    money: 2.5
+  startInventory:
+  - itemId: 1
+    count: 10
+  - itemId: 2
+    count: 10
+  - itemId: 3
+    count: 10
+  - itemId: 4
+    count: 10
+  - itemId: 5
+    count: 10
+  - itemId: 6
+    count: 10
+  - itemId: 7
+    count: 10
+  - itemId: 8
+    count: 10
+  - itemId: 9
+    count: 10
+  - itemId: 105
+    count: 10
+  - itemId: 210
+    count: 20
+  - itemId: 214
+    count: 20
+  - itemId: 217
+    count: 1
+  - itemId: 218
+    count: 1
+  - itemId: 219
+    count: 1
+  - itemId: 208
+    count: 3
+  description: "\u666E\u901A\u5F00\u5C40"

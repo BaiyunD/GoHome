@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b45c1cc6a940eeb408af6a92a4297d9d, type: 3}
+  m_Name: hunger
+  m_EditorClassIdentifier: 
+  id: 0
+  eventName: 
+  eventDescription: "\u4F60\u53D1\u73B0\u524D\u9762\u5783\u573E\u6876\u91CC\u6709\u70B9\u5269\u996D"
+  condition:
+    extraPredicates: []
+  options:
+  - optionText: "\u5403"
+    eventOutcomes:
+    - probability: 100
+      results:
+      - resultType: 0
+        statResult:
+          type: 0
+          operation: 0
+          value: 0
+        itemResult:
+          itemID: 0
+          count: 0
+        enemyId: 
+      outcomeDescription: "\u597D\u5403"
+  - optionText: "\u4E0D\u5403"
+    eventOutcomes:
+    - probability: 100
+      results: []
+      outcomeDescription: "\u4E0D\u98DF\u55DF\u6765\u4E4B\u98DF\uFF01"
+  defaultResults: []
+  weight: 10

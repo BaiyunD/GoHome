@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d20b2eb662536ef4b810d803739150e4, type: 3}
+  m_Name: RegionLootTable_Main
+  m_EditorClassIdentifier: 
+  noLootProbability: 20
+  oneLootProbability: 50
+  twoLootProbability: 20
+  threeLootProbability: 10
+  xiaoYueBraceletItemId: 0
+  retryChancePerLevel: 1
+  regionPools:
+  - regionCode: 0_0
+    entries:
+    - rewardType: 0
+      itemId: 1
+      moneyAmount: 0
+      weight: 30
+      countOption: 2
+    - rewardType: 0
+      itemId: 2
+      moneyAmount: 1
+      weight: 30
+      countOption: 2
+    - rewardType: 0
+      itemId: 3
+      moneyAmount: 0
+      weight: 20
+      countOption: 2
+    - rewardType: 0
+      itemId: 105
+      moneyAmount: 0
+      weight: 15
+      countOption: 2
+    - rewardType: 0
+      itemId: 5
+      moneyAmount: 0
+      weight: 5
+      countOption: 2
+  - regionCode: 1_0
+    entries:
+    - rewardType: 1
+      itemId: 0
+      moneyAmount: 0.1
+      weight: 80
+      countOption: 1
+    - rewardType: 0
+      itemId: 1
+      moneyAmount: 0
+      weight: 10
+      countOption: 2
+    - rewardType: 0
+      itemId: 2
+      moneyAmount: 0
+      weight: 10
+      countOption: 2
+  - regionCode: 2_0
+    entries:
+    - rewardType: 0
+      itemId: 1
+      moneyAmount: 0
+      weight: 40
+      countOption: 2

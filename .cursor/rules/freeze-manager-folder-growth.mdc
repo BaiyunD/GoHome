@@ -1,0 +1,24 @@
+---
+description: Freeze Manager folder growth with lifecycle placement rules
+globs: Assets/Scripts/**/*.cs
+alwaysApply: true
+---
+
+# Manager 目录冻结规则（GoHome）
+
+## 强约束（立即生效）
+
+- 新增脚本不得放入 `Assets/Scripts/Manager/`。
+- 新增脚本必须优先按生命周期落位到 `Assets/Scripts/App/`、`Assets/Scripts/Session/`、`Assets/Scripts/Level/` 或 `Assets/Scripts/UI/`，并在对应功能子目录中放置。
+
+## 允许例外
+
+仅允许以下两类情况触达 `Assets/Scripts/Manager/`：
+
+1. 迁移触达改动：为保持现有功能稳定，对已有旧脚本做最小必要修改。
+2. 明确白名单：已在任务说明或规则文档中指定为临时保留。
+
+## 提交与审查要求
+
+- 若触达 `Assets/Scripts/Manager/`，必须在说明中标注“迁移触达”或“白名单”，并写明后续迁移批次。
+- 不允许借“顺手整理”在本批次做目录级重构或批量移动。

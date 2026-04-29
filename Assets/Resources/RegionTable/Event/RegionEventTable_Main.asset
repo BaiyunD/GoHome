@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1b2c3d4e5f60718293a4b5c6d7e8f90, type: 3}
+  m_Name: RegionEventTable_Main
+  m_EditorClassIdentifier: 
+  regionPools:
+  - regionCode: 0_0
+    entries:
+    - eventRef: {fileID: 11400000, guid: da618d11ce0e3754fb696355646531ed, type: 2}
+      weight: 80
+    - eventRef: {fileID: 11400000, guid: d91b00cadf4349343b3e469abd95c43b, type: 2}
+      weight: 20
+  - regionCode: 1_0
+    entries:
+    - eventRef: {fileID: 11400000, guid: da618d11ce0e3754fb696355646531ed, type: 2}
+      weight: 80
+    - eventRef: {fileID: 11400000, guid: d91b00cadf4349343b3e469abd95c43b, type: 2}
+      weight: 20
+  - regionCode: 2_0
+    entries:
+    - eventRef: {fileID: 11400000, guid: da618d11ce0e3754fb696355646531ed, type: 2}
+      weight: 80
+    - eventRef: {fileID: 11400000, guid: d91b00cadf4349343b3e469abd95c43b, type: 2}
+      weight: 20

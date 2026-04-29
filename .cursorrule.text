@@ -1,0 +1,57 @@
+# 项目规则 - Unity 游戏开发
+
+## 核心约束
+1. 只修改我明确指定的代码块：不要改动任何无关的类、方法、变量或注释。
+2. 不要重构未提及的代码：即使你认为现有代码不够优雅，也不要擅自优化。
+3. 不要添加新功能：除非我明确要求。
+4. 不要删除任何现有代码：包括注释和空行，除非我指定。
+
+## 命名规范
+- 类名：PascalCase（如 PlayerController）
+- 方法名：PascalCase（如 Start, Update, CalculateHealth）
+- 私有字段：_camelCase（如 _speed, _health）
+- 公有属性：PascalCase（如 Health, MaxSpeed）
+- 局部变量：camelCase（如 currentHealth, targetPosition）
+- 常量：UPPER_SNAKE_CASE（如 MAX_PLAYER_COUNT）
+
+## Unity 特定规范
+- Unity 生命周期方法：Start(), Update(), Awake(), FixedUpdate() 等，保持大写开头。
+- 序列化字段：使用 [SerializeField] private 而非 public。
+- 组件获取：优先使用 GetComponent 而非 FindObjectOfType。
+- 协程：方法名以 Coroutine 结尾（如 WaitForAttackCoroutine）。
+
+## 代码格式
+- 使用大括号换行（Allman 风格）：
+  void Method()
+  {
+      // 代码
+  }
+- 缩进：4 个空格（不要用 Tab）。
+- 每行最大长度：100 字符。
+- using 语句放在文件顶部，按字母顺序排列。
+
+## 注释规范
+- 不要删除现有注释。
+- 新增注释用 // 单行形式，不用 /* */。
+- 公共方法需要 XML 注释：
+  /// <summary>
+  /// 计算玩家受到的最终伤害
+  /// </summary>
+  /// <param name="damage">原始伤害值</param>
+  /// <returns>计算后的伤害值</returns>
+
+## 禁止的操作
+- 不要重写我未指定的方法。
+- 不要重新排列类成员的顺序。
+- 不要修改 .meta 文件。
+- 不要自动添加 using 或移除未使用的 using。
+- 不要修改命名空间。
+
+## 示例对话
+用户："给 PlayerController 添加一个 Jump 方法"
+AI 应该只添加：
+void Jump()
+{
+    // 待实现
+}
+不应该修改 Start(), Update() 或任何其他现有代码。
