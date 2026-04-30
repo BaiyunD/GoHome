@@ -61,7 +61,7 @@ public class PlayerResourceService : MonoBehaviour
                 return false;
             }
 
-            value = PlayerStateManager.Instance.Current.Money;
+            value = MoneyUtil.CentsToYuan(PlayerStateManager.Instance.Current.MoneyCents);
             return true;
         }
 
@@ -133,7 +133,8 @@ public class PlayerResourceService : MonoBehaviour
                 return false;
             }
 
-            PlayerStateManager.Instance.Current.Money = value;
+            PlayerStateManager.Instance.Current.MoneyCents =
+                MoneyUtil.ClampNonNegativeCents(MoneyUtil.YuanToCents(value));
             return true;
         }
 
@@ -155,6 +156,11 @@ public class PlayerResourceService : MonoBehaviour
 
     public bool ApplyDelta(PlayerResourceType type, float delta, string reason)
     {
+        if (type == PlayerResourceType.Money)
+        {
+            return ApplyMoneyDelta(delta, reason);
+        }
+
         if (!TryGetValue(type, out float currentValue))
         {
             return false;
@@ -165,6 +171,11 @@ public class PlayerResourceService : MonoBehaviour
 
     public bool TryConsume(PlayerResourceType type, float amount, string reason)
     {
+        if (type == PlayerResourceType.Money)
+        {
+            return TryConsumeMoney(amount, reason);
+        }
+
         if (amount < 0f)
         {
             return ApplyDelta(type, -amount, reason);
@@ -185,12 +196,50 @@ public class PlayerResourceService : MonoBehaviour
 
     public bool TrySpendMoney(float amount, string reason)
     {
-        if (amount < 0f)
+        return TryConsumeMoney(amount, reason);
+    }
+
+    private bool ApplyMoneyDelta(float deltaYuan, string reason)
+    {
+        if (PlayerStateManager.Instance == null || PlayerStateManager.Instance.Current == null)
         {
-            return ApplyDelta(PlayerResourceType.Money, -amount, reason);
+            Debug.LogWarning($"PlayerResourceService.ApplyMoneyDelta -> 玩家运行态未就绪，reason={reason}");
+            return false;
         }
 
-        return TryConsume(PlayerResourceType.Money, amount, reason);
+        int deltaCents = MoneyUtil.YuanToCents(deltaYuan);
+        int nextCents = PlayerStateManager.Instance.Current.MoneyCents + deltaCents;
+        if (nextCents < 0)
+        {
+            return false;
+        }
+
+        PlayerStateManager.Instance.Current.MoneyCents = nextCents;
+        return true;
+    }
+
+    private bool TryConsumeMoney(float amountYuan, string reason)
+    {
+        if (amountYuan < 0f)
+        {
+            return ApplyMoneyDelta(-amountYuan, reason);
+        }
+
+        if (PlayerStateManager.Instance == null || PlayerStateManager.Instance.Current == null)
+        {
+            Debug.LogWarning($"PlayerResourceService.TryConsumeMoney -> 玩家运行态未就绪，reason={reason}");
+            return false;
+        }
+
+        int amountCents = MoneyUtil.YuanToCents(amountYuan);
+        int currentCents = PlayerStateManager.Instance.Current.MoneyCents;
+        if (currentCents < amountCents)
+        {
+            return false;
+        }
+
+        PlayerStateManager.Instance.Current.MoneyCents = currentCents - amountCents;
+        return true;
     }
 
     private static void DebugLogUnsupportedType(string method, PlayerResourceType type, string reason)

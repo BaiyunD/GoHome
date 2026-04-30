@@ -73,8 +73,9 @@ public static class RegionLootService
                 throw new InvalidOperationException("玩家金钱属性不可用，流程中断");
             }
 
-            float amount = Mathf.Max(0f, entry.moneyAmount) * count;
-            if (amount <= 0f)
+            float amount = MoneyUtil.CentsToYuan(
+                MoneyUtil.YuanToCents(Mathf.Max(0f, entry.moneyAmount) * count));
+            if (MoneyUtil.YuanToCents(amount) <= 0)
             {
                 continue;
             }
@@ -112,7 +113,7 @@ public static class RegionLootService
             sb.Append("【");
             if (grant.RewardType == LootRewardType.Money)
             {
-                sb.Append("金钱】*").Append(grant.MoneyAmount.ToString("0.0"));
+                sb.Append("金钱】*").Append(grant.MoneyAmount.ToString("0.00"));
                 continue;
             }
 
@@ -190,7 +191,7 @@ public static class RegionLootService
                     continue;
                 }
 
-                if (entry.rewardType == LootRewardType.Money && entry.moneyAmount <= 0f)
+                if (entry.rewardType == LootRewardType.Money && MoneyUtil.YuanToCents(entry.moneyAmount) <= 0)
                 {
                     continue;
                 }

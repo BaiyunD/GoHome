@@ -76,7 +76,7 @@ public class SaveSnapshotAssembler
             playerData.HealthCurrent = 0f;
             playerData.HealthMax = 0f;
         }
-        playerData.Money = runtime.Money;
+        playerData.MoneyCents = runtime.MoneyCents;
         playerData.Attack = runtime.Attack;
         playerData.Defense = runtime.Defense;
         playerData.CriticalRate = runtime.CriticalRate;

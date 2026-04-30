@@ -16,7 +16,7 @@ public sealed class PlayerRuntime
     public float BlockRate { get; set; }
     public float DodgeRate { get; set; }
     public float EscapeRate { get; set; }
-    public float Money { get; set; }
+    public int MoneyCents { get; set; }
     public string DisplayName { get; set; }
     public IReadOnlyList<string> TraitIds { get; set; }
 
@@ -57,7 +57,8 @@ public sealed class PlayerRuntime
         BlockRate = data.BlockRate;
         DodgeRate = data.DodgeRate;
         EscapeRate = data.EscapeRate;
-        Money = startResources != null ? startResources.money : 0f;
+        float startMoneyYuan = startResources != null ? startResources.money : 0f;
+        MoneyCents = MoneyUtil.ClampNonNegativeCents(MoneyUtil.YuanToCents(startMoneyYuan));
         DisplayName = data.CharacterName;
         TraitIds = data.TraitIds ?? new List<string>();
     }

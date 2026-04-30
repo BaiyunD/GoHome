@@ -348,7 +348,7 @@ public static class RegionBootstrapValidator
                     );
                 }
 
-                if (entry.rewardType == LootRewardType.Money && entry.moneyAmount <= 0f)
+                if (entry.rewardType == LootRewardType.Money && MoneyUtil.YuanToCents(entry.moneyAmount) <= 0)
                 {
                     throw new InvalidOperationException(
                         $"[POOL_ENTRY_INVALID] Money条目缺少合法moneyAmount：regionCode={pool.regionCode}, index={j}。"

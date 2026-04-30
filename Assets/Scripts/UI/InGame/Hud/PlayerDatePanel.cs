@@ -189,7 +189,7 @@ public class PlayerDatePanel : MonoBehaviour
             return "null";
         }
 
-        return money.ToString("0.0");
+        return money.ToString("0.00");
     }
 
     public void Show()

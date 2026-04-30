@@ -145,7 +145,7 @@ public class PlayerStateManager : MonoBehaviour
         runtime.CriticalDamage = snapshot.CriticalDamage;
         runtime.BlockRate = snapshot.BlockRate;
         runtime.DodgeRate = snapshot.DodgeRate;
-        runtime.Money = snapshot.Money;
+        runtime.MoneyCents = MoneyUtil.ClampNonNegativeCents(snapshot.MoneyCents);
     }
 
     private static PlayerData CreateRuntimeDataFromSnapshot(SavePlayerData snapshot)

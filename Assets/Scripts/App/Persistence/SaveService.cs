@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public int Version = 2;
+    public int Version = 3;
     public SavePlayerData Player = new SavePlayerData();
     public SaveRouteData Route = new SaveRouteData();
     public SaveInventoryData Inventory = new SaveInventoryData();
@@ -25,7 +25,7 @@ public class SavePlayerData
     public float EnergyMax;
     public float HealthCurrent;
     public float HealthMax;
-    public float Money;
+    public int MoneyCents;
     public float Attack;
     public float Defense;
     public float CriticalRate;
