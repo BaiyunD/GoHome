@@ -15,5 +15,8 @@ MonoBehaviour:
   commodityId: 5
   itemId: 4
   tradeCount: 2
-  buyPrice: 0.4
-  sellPrice: 0.2
+  buyPrice: 0.2
+  sellPrice: 0.1
+  tradePermission: 0
+  isSellAll: 1
+  isPriceIncreaseOnBuy: 1

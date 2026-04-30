@@ -18,3 +18,5 @@ MonoBehaviour:
   buyPrice: 3.2
   sellPrice: 0
   tradePermission: 1
+  isSellAll: 1
+  isPriceIncreaseOnBuy: 1

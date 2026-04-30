@@ -16,5 +16,7 @@ MonoBehaviour:
   itemId: 10
   tradeCount: 10
   buyPrice: 0
-  sellPrice: 1
+  sellPrice: 0.1
   tradePermission: 2
+  isSellAll: 1
+  isPriceIncreaseOnBuy: 1
