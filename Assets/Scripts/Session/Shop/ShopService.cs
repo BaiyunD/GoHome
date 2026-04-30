@@ -324,6 +324,355 @@ public sealed class ShopService : MonoBehaviour
         return _pointsPolicy.CalculatePoints(pricePerTrade);
     }
 
+    private const int LotteryCostPoints = 100;
+    private const float LotteryWeightEpsilon = 0.001f;
+
+    public ShopLotteryDrawResult TryDrawLottery(ShopLotteryPoolDefinition pool)
+    {
+        if (!IsFeatureEnabled)
+        {
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.InvalidPool,
+                DetailMessage = "商店功能未开启。"
+            };
+        }
+
+        if (pool == null || pool.Tiers == null || pool.Tiers.Count == 0)
+        {
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.InvalidPool,
+                DetailMessage = "奖池未配置或为空。"
+            };
+        }
+
+        if (_wallet.Points < LotteryCostPoints)
+        {
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.InsufficientPoints
+            };
+        }
+
+        if (!TryValidateLotteryPool(pool, out string invalidMessage))
+        {
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.InvalidPool,
+                DetailMessage = invalidMessage
+            };
+        }
+
+        float sumWeights = pool.SumTierWeights();
+        float thanksWeight = Mathf.Max(0f, 100f - sumWeights);
+
+        if (!_wallet.TrySpendPoints(LotteryCostPoints))
+        {
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.InsufficientPoints
+            };
+        }
+
+        int bucket = UnityEngine.Random.Range(0, 10000);
+        int thanksBuckets = Mathf.Clamp(Mathf.RoundToInt(thanksWeight * 100f), 0, 10000);
+        if (bucket < thanksBuckets)
+        {
+            NotifyStateChanged();
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.RolledThanks
+            };
+        }
+
+        int tierSpan = 10000 - thanksBuckets;
+        int tierRoll = bucket - thanksBuckets;
+        ShopLotteryTierData chosenTier = null;
+        if (tierSpan <= 0 || sumWeights <= LotteryWeightEpsilon)
+        {
+            _wallet.RefundPoints(LotteryCostPoints);
+            NotifyStateChanged();
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.GrantFailed,
+                DetailMessage = "抽奖过程异常，积分已退回。"
+            };
+        }
+
+        float normalized = tierRoll / (float)tierSpan;
+        float cumulative = 0f;
+        ShopLotteryTierData lastWeightedTier = null;
+        for (int i = 0; i < pool.Tiers.Count; i++)
+        {
+            ShopLotteryTierData tier = pool.Tiers[i];
+            if (tier == null)
+            {
+                continue;
+            }
+
+            float w = tier.WeightPercent;
+            if (w <= 0f)
+            {
+                continue;
+            }
+
+            lastWeightedTier = tier;
+            cumulative += w / sumWeights;
+            if (normalized < cumulative)
+            {
+                chosenTier = tier;
+                break;
+            }
+        }
+
+        if (chosenTier == null)
+        {
+            chosenTier = lastWeightedTier;
+        }
+
+        if (chosenTier == null)
+        {
+            _wallet.RefundPoints(LotteryCostPoints);
+            NotifyStateChanged();
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.GrantFailed,
+                DetailMessage = "抽奖过程异常，积分已退回。"
+            };
+        }
+
+        if (!TryPickRandomRewardOption(chosenTier, out ShopLotteryRewardOptionData option))
+        {
+            _wallet.RefundPoints(LotteryCostPoints);
+            NotifyStateChanged();
+            return new ShopLotteryDrawResult
+            {
+                Reason = ShopLotteryDrawReason.GrantFailed,
+                DetailMessage = "奖励抽取异常，积分已退回。"
+            };
+        }
+
+        if (!TryGrantLotteryReward(option, out ShopLotteryDrawResult grantResult))
+        {
+            _wallet.RefundPoints(LotteryCostPoints);
+            NotifyStateChanged();
+            return grantResult;
+        }
+
+        grantResult.TierDisplayName = chosenTier.DisplayName;
+        NotifyStateChanged();
+        return grantResult;
+    }
+
+    private static bool TryValidateLotteryPool(ShopLotteryPoolDefinition pool, out string message)
+    {
+        message = string.Empty;
+        float p = pool.SumTierWeights();
+        if (p > 100f + LotteryWeightEpsilon)
+        {
+            message = "奖池档位概率之和超过100%，请调整奖池后再抽奖。";
+            return false;
+        }
+
+        float thanksRemainder = Mathf.Max(0f, 100f - p);
+        if (thanksRemainder > LotteryWeightEpsilon)
+        {
+            for (int i = 0; i < pool.Tiers.Count; i++)
+            {
+                ShopLotteryTierData tier = pool.Tiers[i];
+                if (tier == null)
+                {
+                    continue;
+                }
+
+                if (IsReservedThanksName(tier.DisplayName))
+                {
+                    message = "存在隐式「谢谢惠顾」余量时，档位名称不能使用「谢谢惠顾」。请将档位概率之和设为100%或修改档位名称。";
+                    return false;
+                }
+            }
+        }
+
+        for (int i = 0; i < pool.Tiers.Count; i++)
+        {
+            ShopLotteryTierData tier = pool.Tiers[i];
+            if (tier == null)
+            {
+                continue;
+            }
+
+            if (tier.WeightPercent <= 0f)
+            {
+                continue;
+            }
+
+            if (!TierHasAnyValidReward(tier))
+            {
+                message = "奖池中某档位概率大于0但未配置有效奖励，请检查后重试。";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsReservedThanksName(string displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            return false;
+        }
+
+        return string.Equals(displayName.Trim(), ShopLotteryPoolDefinition.ReservedThanksDisplayName, StringComparison.Ordinal);
+    }
+
+    private static bool TierHasAnyValidReward(ShopLotteryTierData tier)
+    {
+        IReadOnlyList<ShopLotteryRewardOptionData> options = tier.RewardOptions;
+        if (options == null || options.Count == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < options.Count; i++)
+        {
+            ShopLotteryRewardOptionData opt = options[i];
+            if (opt == null)
+            {
+                continue;
+            }
+
+            if (IsValidRewardOption(opt))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsValidRewardOption(ShopLotteryRewardOptionData option)
+    {
+        switch (option.Kind)
+        {
+            case ShopLotteryRewardKind.Item:
+                return option.ItemId > 0 && option.ItemCount > 0;
+            case ShopLotteryRewardKind.Money:
+                return MoneyUtil.YuanToCents(option.MoneyAmount) > 0;
+            default:
+                return false;
+        }
+    }
+
+    private static bool TryPickRandomRewardOption(ShopLotteryTierData tier, out ShopLotteryRewardOptionData option)
+    {
+        option = null;
+        IReadOnlyList<ShopLotteryRewardOptionData> options = tier.RewardOptions;
+        if (options == null || options.Count == 0)
+        {
+            return false;
+        }
+
+        List<int> validIndices = new List<int>();
+        for (int i = 0; i < options.Count; i++)
+        {
+            if (options[i] != null && IsValidRewardOption(options[i]))
+            {
+                validIndices.Add(i);
+            }
+        }
+
+        if (validIndices.Count == 0)
+        {
+            return false;
+        }
+
+        int pick = validIndices[UnityEngine.Random.Range(0, validIndices.Count)];
+        option = options[pick];
+        return option != null;
+    }
+
+    private bool TryGrantLotteryReward(ShopLotteryRewardOptionData option, out ShopLotteryDrawResult result)
+    {
+        result = default;
+        switch (option.Kind)
+        {
+            case ShopLotteryRewardKind.Item:
+                if (InventoryManager.Instance == null)
+                {
+                    result = new ShopLotteryDrawResult
+                    {
+                        Reason = ShopLotteryDrawReason.GrantFailed,
+                        DetailMessage = "背包系统未就绪，积分已退回。"
+                    };
+                    return false;
+                }
+
+                InventoryManager.Instance.AddItem(option.ItemId, option.ItemCount);
+                result = new ShopLotteryDrawResult
+                {
+                    Reason = ShopLotteryDrawReason.RolledTier,
+                    RewardKind = ShopLotteryRewardKind.Item,
+                    ItemId = option.ItemId,
+                    ItemCount = option.ItemCount,
+                    ItemDisplayName = ResolveItemName(option.ItemId)
+                };
+                return true;
+
+            case ShopLotteryRewardKind.Money:
+                float money = NormalizeMoney(option.MoneyAmount);
+                if (money <= 0f)
+                {
+                    result = new ShopLotteryDrawResult
+                    {
+                        Reason = ShopLotteryDrawReason.GrantFailed,
+                        DetailMessage = "金钱奖励无效，积分已退回。"
+                    };
+                    return false;
+                }
+
+                if (PlayerResourceService.Instance == null)
+                {
+                    result = new ShopLotteryDrawResult
+                    {
+                        Reason = ShopLotteryDrawReason.GrantFailed,
+                        DetailMessage = "玩家资源服务未就绪，积分已退回。"
+                    };
+                    return false;
+                }
+
+                if (!PlayerResourceService.Instance.ApplyDelta(
+                        PlayerResourceType.Money,
+                        money,
+                        "ShopService.TryDrawLottery.MoneyReward"))
+                {
+                    result = new ShopLotteryDrawResult
+                    {
+                        Reason = ShopLotteryDrawReason.GrantFailed,
+                        DetailMessage = "金钱发放失败，积分已退回。"
+                    };
+                    return false;
+                }
+
+                result = new ShopLotteryDrawResult
+                {
+                    Reason = ShopLotteryDrawReason.RolledTier,
+                    RewardKind = ShopLotteryRewardKind.Money,
+                    MoneyAmount = money
+                };
+                return true;
+
+            default:
+                result = new ShopLotteryDrawResult
+                {
+                    Reason = ShopLotteryDrawReason.GrantFailed,
+                    DetailMessage = "未知奖励类型，积分已退回。"
+                };
+                return false;
+        }
+    }
+
     private static ShopTradeResult BuildFailure(ShopTradeReasonCode reasonCode, ShopTradeOperation operation)
     {
         return new ShopTradeResult
@@ -399,6 +748,6 @@ public sealed class ShopService : MonoBehaviour
 
     private static float NormalizeMoney(float value)
     {
-        return Mathf.Round(value * 10f) / 10f;
+        return MoneyUtil.CentsToYuan(MoneyUtil.YuanToCents(value));
     }
 }

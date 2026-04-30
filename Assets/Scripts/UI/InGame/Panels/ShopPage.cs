@@ -54,7 +54,10 @@ public sealed class ShopPage : MonoBehaviour
 
     public void OnLottery()
     {
-        // Stage-1 placeholder for future lottery flow.
+        if (presenter != null)
+        {
+            presenter.RequestLottery();
+        }
     }
 
     public void BindPresenter(ShopPagePresenter pagePresenter)
@@ -90,7 +93,7 @@ public sealed class ShopPage : MonoBehaviour
             int buyDisplayCount = viewModel.TradeCount;
             float buyDisplayPrice = viewModel.BuyPrice * buyDisplayCount;
 
-            detailBuyPriceText.text = $"购买：{buyDisplayPrice:0.0}元";
+            detailBuyPriceText.text = $"购买：{buyDisplayPrice:0.00}元";
         }
         if (detailSellPriceText != null)
         {
@@ -102,7 +105,7 @@ public sealed class ShopPage : MonoBehaviour
 
             float sellDisplayPrice = viewModel.SellPrice * sellDisplayCount;
 
-            detailSellPriceText.text = $"出售：{sellDisplayPrice:0.0}元";
+            detailSellPriceText.text = $"出售：{sellDisplayPrice:0.00}元";
         }
         if (detailBuyButton != null)
         {

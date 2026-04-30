@@ -48,4 +48,30 @@ public sealed class ShopWallet
 
         Points += delta;
     }
+
+    public bool TrySpendPoints(int amount)
+    {
+        if (amount <= 0)
+        {
+            return true;
+        }
+
+        if (Points < amount)
+        {
+            return false;
+        }
+
+        Points -= amount;
+        return true;
+    }
+
+    public void RefundPoints(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        Points += amount;
+    }
 }

@@ -9,6 +9,7 @@ public sealed class ShopPagePresenter : MonoBehaviour
 
     [Header("Data")]
     [SerializeField] private ShopCatalogDefinition catalogDefinition;
+    [SerializeField] private ShopLotteryPoolDefinition lotteryPool;
 
     [Header("Header")]
     [SerializeField] private TMP_Text moneyText;
@@ -86,6 +87,17 @@ public sealed class ShopPagePresenter : MonoBehaviour
         ExecuteTrade(_selectedCommodityId, ShopTradeOperation.Sell);
     }
 
+    public void RequestLottery()
+    {
+        if (ShopService.Instance == null)
+        {
+            return;
+        }
+
+        ShopLotteryDrawResult result = ShopService.Instance.TryDrawLottery(lotteryPool);
+        NotifyLotteryResult(result);
+    }
+
     public void SelectCommodity(int commodityId)
     {
         _selectedCommodityId = commodityId;
@@ -123,7 +135,7 @@ public sealed class ShopPagePresenter : MonoBehaviour
 
         if (moneyText != null)
         {
-            moneyText.text = $"金钱：{cash:0.0}元";
+            moneyText.text = $"金钱：{cash:0.00}元";
         }
         if (pointsText != null)
         {
@@ -240,5 +252,21 @@ public sealed class ShopPagePresenter : MonoBehaviour
         }
 
         UIManager.Instance.ShowResultToast(ShopToastService.BuildMessage(result));
+    }
+
+    private static void NotifyLotteryResult(ShopLotteryDrawResult result)
+    {
+        if (ShopToastService.Instance != null)
+        {
+            ShopToastService.Instance.NotifyLotteryResult(result);
+            return;
+        }
+
+        if (UIManager.Instance == null)
+        {
+            return;
+        }
+
+        UIManager.Instance.ShowResultToast(ShopToastService.BuildLotteryMessage(result));
     }
 }
