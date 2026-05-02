@@ -27,6 +27,6 @@ public sealed class BlackKnifeRuptureEffect : ItemEffectDefinition
         float mult = 1f + stacks * (0.04f * level);
         context.FinalDamage = Mathf.Max(0, Mathf.RoundToInt(context.ComputedDamage * mult));
         int displayPercent = 4 * level * stacks;
-        context.AppendAttackerPhaseLog($"【割裂】伤害提升[{displayPercent}%]");
+        context.AppendAttackerPhaseLog($"【割裂】伤害提升{displayPercent}%");
     }
 }
