@@ -82,13 +82,15 @@ public class PassiveSystem : MonoBehaviour
         float baseCriticalDamage = template != null ? template.CriticalDamage : 150f;
         float baseBlockRate = template != null ? template.BlockRate : 0f;
         float baseDodgeRate = template != null ? template.DodgeRate : 0f;
+        float baseEscapeRate = template != null ? template.EscapeRate : 0f;
 
         runtime.Attack = baseAttack + acc.AttackBonus;
         runtime.Defense = baseDefense + acc.DefenseBonus;
-        runtime.CriticalRate = baseCriticalRate + acc.CriticalRateBonus;
-        runtime.CriticalDamage = baseCriticalDamage;
-        runtime.BlockRate = baseBlockRate + acc.BlockRateBonus;
-        runtime.DodgeRate = baseDodgeRate + acc.DodgeRateBonus;
+        runtime.CriticalRate = CharacterDataBase.ClampRate(baseCriticalRate + acc.CriticalRateBonus);
+        runtime.CriticalDamage = Mathf.Max(0f, baseCriticalDamage + acc.CriticalDamageBonus);
+        runtime.BlockRate = CharacterDataBase.ClampRate(baseBlockRate + acc.BlockRateBonus);
+        runtime.DodgeRate = CharacterDataBase.ClampRate(baseDodgeRate + acc.DodgeRateBonus);
+        runtime.EscapeRate = CharacterDataBase.ClampRate(baseEscapeRate + acc.EscapeRateBonus);
 
         ApplyEnergyMaxBonus(acc.EnergyMaxBonus);
 
