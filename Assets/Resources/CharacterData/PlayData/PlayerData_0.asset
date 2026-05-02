@@ -16,9 +16,9 @@ MonoBehaviour:
   hp: 200
   attack: 40
   defense: 20
-  criticalRate: 100
+  criticalRate: 80
   criticalDamage: 150
-  dodgeRate: 100
-  blockRate: 100
+  dodgeRate: 80
+  blockRate: 80
   escapeRate: 50
   traitIds: []
