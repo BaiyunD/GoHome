@@ -53,6 +53,18 @@ public class RestContext
         set;
     }
 
+    public int CurrentRestItemId
+    {
+        get;
+        set;
+    }
+
+    public string CurrentRestItemDisplayName
+    {
+        get;
+        set;
+    }
+
     public RestContext(GameManager gameManager)
     {
         GameManager = gameManager;
