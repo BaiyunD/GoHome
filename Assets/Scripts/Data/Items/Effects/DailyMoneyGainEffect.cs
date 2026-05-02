@@ -4,7 +4,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "DailyMoneyGainEffect", menuName = "GoHome/Item Effects/Specific/Daily Money Gain")]
 public sealed class DailyMoneyGainEffect : ItemEffectDefinition
 {
-    private const int ITEM_ID = 208;
     [SerializeField] private float moneyPerLevel = 0.1f;
 
     public void Configure(float moneyPerLevelValue)
@@ -35,20 +34,27 @@ public sealed class DailyMoneyGainEffect : ItemEffectDefinition
         }
 
         string amountText = amount.ToString("0.##", CultureInfo.InvariantCulture);
-        context.AddItemTriggeredLog(ResolveItemName(ITEM_ID), $"获得{amountText}元");
+        context.AddItemTriggeredLog(ResolveRestItemLogName(context), $"获得{amountText}元");
     }
 
-    private static string ResolveItemName(int itemId)
+    private static string ResolveRestItemLogName(RestContext context)
     {
-        if (ItemRegistry.Instance != null
-            && ItemRegistry.Instance.TryGet(itemId, out ItemBase item)
-            && item != null
-            && !string.IsNullOrWhiteSpace(item.DisplayName))
+        if (context == null)
         {
-            return item.DisplayName;
+            return string.Empty;
         }
 
-        return $"Item({itemId})";
+        if (!string.IsNullOrWhiteSpace(context.CurrentRestItemDisplayName))
+        {
+            return context.CurrentRestItemDisplayName;
+        }
+
+        if (context.CurrentRestItemId > 0)
+        {
+            return $"Item({context.CurrentRestItemId})";
+        }
+
+        return string.Empty;
     }
 
 }
