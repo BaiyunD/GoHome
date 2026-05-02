@@ -23,6 +23,8 @@ public class PassiveAccumulator
     public float CriticalRateBonus;
     public float BlockRateBonus;
     public float DodgeRateBonus;
+    public float CriticalDamageBonus;
+    public float EscapeRateBonus;
 }
 
 public class RestContext
