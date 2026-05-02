@@ -185,26 +185,44 @@ public static class ItemEffectDispatcher
             return false;
         }
 
-        for (int i = 0; i < commonEffects.Count; i++)
+        string displayName = ResolveItemDisplayName(itemId);
+        try
         {
-            ItemEffectDefinition effectDefinition = commonEffects[i];
-            if (effectDefinition == null)
+            if (context != null)
             {
-                continue;
+                context.CurrentRestItemId = itemId;
+                context.CurrentRestItemDisplayName = displayName;
             }
 
-            effectDefinition.OnRestItemEffect(context, level);
+            for (int i = 0; i < commonEffects.Count; i++)
+            {
+                ItemEffectDefinition effectDefinition = commonEffects[i];
+                if (effectDefinition == null)
+                {
+                    continue;
+                }
+
+                effectDefinition.OnRestItemEffect(context, level);
+            }
+
+            for (int i = 0; i < specificEffects.Count; i++)
+            {
+                ItemEffectDefinition effectDefinition = specificEffects[i];
+                if (effectDefinition == null)
+                {
+                    continue;
+                }
+
+                effectDefinition.OnRestItemEffect(context, level);
+            }
         }
-
-        for (int i = 0; i < specificEffects.Count; i++)
+        finally
         {
-            ItemEffectDefinition effectDefinition = specificEffects[i];
-            if (effectDefinition == null)
+            if (context != null)
             {
-                continue;
+                context.CurrentRestItemId = 0;
+                context.CurrentRestItemDisplayName = null;
             }
-
-            effectDefinition.OnRestItemEffect(context, level);
         }
 
         return true;
