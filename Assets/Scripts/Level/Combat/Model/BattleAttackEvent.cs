@@ -7,7 +7,9 @@ public sealed class BattleAttackEvent
         int damage,
         bool isCritical = false,
         bool isBlocked = false,
-        bool isDodged = false
+        bool isDodged = false,
+        string attackerPhaseLogSuffix = null,
+        string defenderPhaseLogSuffix = null
     )
     {
         AttackerName = attackerName ?? string.Empty;
@@ -17,6 +19,8 @@ public sealed class BattleAttackEvent
         IsCritical = isCritical;
         IsBlocked = isBlocked;
         IsDodged = isDodged;
+        AttackerPhaseLogSuffix = attackerPhaseLogSuffix ?? string.Empty;
+        DefenderPhaseLogSuffix = defenderPhaseLogSuffix ?? string.Empty;
     }
 
     public string AttackerName { get; }
@@ -26,4 +30,6 @@ public sealed class BattleAttackEvent
     public bool IsCritical { get; }
     public bool IsBlocked { get; }
     public bool IsDodged { get; }
+    public string AttackerPhaseLogSuffix { get; }
+    public string DefenderPhaseLogSuffix { get; }
 }

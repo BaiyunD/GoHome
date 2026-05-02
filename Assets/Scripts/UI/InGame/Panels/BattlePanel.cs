@@ -364,7 +364,21 @@ public class BattlePanel : MonoBehaviour
         string criticalTag = evt.IsCritical ? "【暴击】" : string.Empty;
         string blockTag = evt.IsBlocked ? "【格挡】" : string.Empty;
         string dodgeTag = evt.IsDodged ? "【闪避】" : string.Empty;
-        return $"{attacker}使用了【{skill}】{criticalTag}，对{defender}造成{evt.Damage}点伤害{blockTag}{dodgeTag}";
+        string core = $"{attacker}使用了【{skill}】{criticalTag}，对{defender}造成{evt.Damage}点伤害{blockTag}{dodgeTag}";
+        string attackerPhase = evt.AttackerPhaseLogSuffix ?? string.Empty;
+        string defenderPhase = evt.DefenderPhaseLogSuffix ?? string.Empty;
+        string line = core + "。";
+        if (!string.IsNullOrEmpty(attackerPhase))
+        {
+            line += attackerPhase + "。";
+        }
+
+        if (!string.IsNullOrEmpty(defenderPhase))
+        {
+            line += defenderPhase + "。";
+        }
+
+        return line;
     }
 
     private static string BuildBattleLogOutput(string playerActionOutput, string enemyActionOutput)

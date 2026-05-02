@@ -18,6 +18,7 @@ public class BattleManager : MonoBehaviour
     private bool _controlsInteractable = true;
     private BattlePhase _phase = BattlePhase.None;
     private BattleTurnSubPhase _turnSubPhase = BattleTurnSubPhase.None;
+    private int _playerRuptureStackCount;
 
     public CharacterRuntimeStats PlayerRuntime => _playerSnapshot;
     public CharacterRuntimeStats EnemyRuntime => _enemySnapshot;
@@ -119,6 +120,7 @@ public class BattleManager : MonoBehaviour
             PlayerStateManager.Instance.Current.EscapeRate
         );
         _enemySnapshot = new CharacterRuntimeStats(enemyRuntime);
+        ResetBattleCombatExtras();
 
         SetSubPhase(BattleTurnSubPhase.WaitPlayerInput, "BattleStart-WaitPlayerInput");
         InjectTraits();
@@ -181,6 +183,7 @@ public class BattleManager : MonoBehaviour
         _onBattleEnd = null;
         _playerSnapshot = null;
         _enemySnapshot = null;
+        ResetBattleCombatExtras();
         if (EnemyStateManager.Instance != null)
         {
             EnemyStateManager.Instance.ClearCurrent();
@@ -509,16 +512,25 @@ public class BattleManager : MonoBehaviour
             GetEnemyDamageBoostMultiplier(),
             GetPlayerDamageReductionMultiplier()
         );
-        result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamagePlayer, resolution.Damage));
+        int damage = resolution.Damage;
+        BattleItemHookRunner.RunPlayerBeforeReceiveHit(
+            _enemySnapshot,
+            _playerSnapshot,
+            ref damage,
+            out string enemyAttackerPhaseLog,
+            out string playerDefenderPhaseLog);
+        result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamagePlayer, damage));
         string enemyName = GetEnemyBaseName();
         result.SettlementLogs.Add(CombatSettlementLog.FromAttack(new BattleAttackEvent(
             enemyName,
             "你",
             "普攻",
-            resolution.Damage,
+            damage,
             resolution.IsCritical,
             resolution.IsBlocked,
-            resolution.IsDodged
+            resolution.IsDodged,
+            enemyAttackerPhaseLog,
+            playerDefenderPhaseLog
         )));
         return result;
     }
@@ -817,6 +829,17 @@ public class BattleManager : MonoBehaviour
                 TraitManager.Instance.AddTrait(traitId, TraitOwner.Player);
             }
         }
+    }
+
+    private void ResetBattleCombatExtras()
+    {
+        _playerRuptureStackCount = 0;
+    }
+
+    public int AdvancePlayerRuptureStackAndGetCapped()
+    {
+        _playerRuptureStackCount = Mathf.Min(_playerRuptureStackCount + 1, 20);
+        return _playerRuptureStackCount;
     }
 }
 

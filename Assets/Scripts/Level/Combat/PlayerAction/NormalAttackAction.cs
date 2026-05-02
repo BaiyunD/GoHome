@@ -14,16 +14,25 @@ public sealed class NormalAttackAction : IPlayerAction
             context.DamageBoostMultiplier,
             context.DamageReductionMultiplier
         );
-        result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamageEnemy, resolution.Damage));
+        int damage = resolution.Damage;
+        BattleItemHookRunner.RunPlayerBeforeAttack(
+            context.Player,
+            context.Enemy,
+            ref damage,
+            out string attackerPhaseLog,
+            out string defenderPhaseLog);
+        result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamageEnemy, damage));
         result.SettlementLogs.Add(
             CombatSettlementLog.FromAttack(new BattleAttackEvent(
                 "你",
                 context.EnemyName,
                 "普攻",
-                resolution.Damage,
+                damage,
                 resolution.IsCritical,
                 resolution.IsBlocked,
-                resolution.IsDodged
+                resolution.IsDodged,
+                attackerPhaseLog,
+                defenderPhaseLog
             ))
         );
         return result;
