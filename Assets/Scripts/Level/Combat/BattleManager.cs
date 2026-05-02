@@ -367,15 +367,6 @@ public class BattleManager : MonoBehaviour
         return _playerSnapshot != null && _enemySnapshot != null;
     }
 
-    private int CalculateNormalAttackDamage(CharacterRuntimeStats attacker, CharacterRuntimeStats defender)
-    {
-        if (attacker == null || defender == null)
-        {
-            return 0;
-        }
-
-        return Mathf.Max(0, attacker.Attack - defender.Defense);
-    }
 
     private bool QueueBattleEndByHpIfNeeded()
     {
@@ -439,7 +430,13 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        PlayerActionContext context = new PlayerActionContext(_playerSnapshot, _enemySnapshot, GetEnemyBaseName());
+        PlayerActionContext context = new PlayerActionContext(
+            _playerSnapshot,
+            _enemySnapshot,
+            GetEnemyBaseName(),
+            GetPlayerDamageBoostMultiplier(),
+            GetEnemyDamageReductionMultiplier()
+        );
         CombatActionResult result = action.Execute(context);
         _pendingPlayerActionResult = result;
         ApplyPlayerActionResultEffects(result);
@@ -506,11 +503,44 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        int damage = CalculateNormalAttackDamage(_enemySnapshot, _playerSnapshot);
-        result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamagePlayer, damage));
+        NormalAttackResolution resolution = NormalAttackResolver.Resolve(
+            _enemySnapshot,
+            _playerSnapshot,
+            GetEnemyDamageBoostMultiplier(),
+            GetPlayerDamageReductionMultiplier()
+        );
+        result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamagePlayer, resolution.Damage));
         string enemyName = GetEnemyBaseName();
-        result.SettlementLogs.Add(CombatSettlementLog.FromAttack(new BattleAttackEvent(enemyName, "你", "普攻", damage)));
+        result.SettlementLogs.Add(CombatSettlementLog.FromAttack(new BattleAttackEvent(
+            enemyName,
+            "你",
+            "普攻",
+            resolution.Damage,
+            resolution.IsCritical,
+            resolution.IsBlocked,
+            resolution.IsDodged
+        )));
         return result;
+    }
+
+    private static float GetPlayerDamageBoostMultiplier()
+    {
+        return 1f;
+    }
+
+    private static float GetEnemyDamageBoostMultiplier()
+    {
+        return 1f;
+    }
+
+    private static float GetPlayerDamageReductionMultiplier()
+    {
+        return 0f;
+    }
+
+    private static float GetEnemyDamageReductionMultiplier()
+    {
+        return 0f;
     }
 
     private void ApplyEnemyActionResultEffects(CombatActionResult result)

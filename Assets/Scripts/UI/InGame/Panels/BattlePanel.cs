@@ -361,7 +361,10 @@ public class BattlePanel : MonoBehaviour
         string attacker = evt.AttackerName ?? string.Empty;
         string defender = evt.DefenderName ?? string.Empty;
         string skill = evt.SkillLabel ?? string.Empty;
-        return $"{attacker}使用【{skill}】，对{defender}造成{evt.Damage}点伤害";
+        string criticalTag = evt.IsCritical ? "【暴击】" : string.Empty;
+        string blockTag = evt.IsBlocked ? "【格挡】" : string.Empty;
+        string dodgeTag = evt.IsDodged ? "【闪避】" : string.Empty;
+        return $"{attacker}使用了【{skill}】{criticalTag}，对{defender}造成{evt.Damage}点伤害{blockTag}{dodgeTag}";
     }
 
     private static string BuildBattleLogOutput(string playerActionOutput, string enemyActionOutput)
