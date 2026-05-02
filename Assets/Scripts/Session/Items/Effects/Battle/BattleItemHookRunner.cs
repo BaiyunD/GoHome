@@ -49,4 +49,25 @@ public static class BattleItemHookRunner
         attackerPhaseLogSuffix = context.BuildAttackerPhaseLogSuffix();
         defenderPhaseLogSuffix = context.BuildDefenderPhaseLogSuffix();
     }
+
+    public static void RunPlayerAfterAttack(
+        CharacterRuntimeStats player,
+        CharacterRuntimeStats enemy,
+        int finalDamageDealtToEnemy,
+        out string afterAttackPhaseLogSuffix)
+    {
+        BattleEffectContext context = new BattleEffectContext
+        {
+            Hook = BattleEffectHook.AfterAttack,
+            Owner = BattleEffectOwner.Player,
+            Attacker = player,
+            Defender = enemy,
+            ComputedDamage = finalDamageDealtToEnemy,
+            FinalDamage = finalDamageDealtToEnemy,
+            TurnIndex = 0
+        };
+
+        ItemEffectDispatcher.OnBattleHookItemEffect(context);
+        afterAttackPhaseLogSuffix = context.BuildAfterAttackPhaseLogSuffix();
+    }
 }

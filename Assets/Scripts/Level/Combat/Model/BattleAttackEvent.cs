@@ -9,7 +9,8 @@ public sealed class BattleAttackEvent
         bool isBlocked = false,
         bool isDodged = false,
         string attackerPhaseLogSuffix = null,
-        string defenderPhaseLogSuffix = null
+        string defenderPhaseLogSuffix = null,
+        string afterAttackPhaseLogSuffix = null
     )
     {
         AttackerName = attackerName ?? string.Empty;
@@ -21,6 +22,7 @@ public sealed class BattleAttackEvent
         IsDodged = isDodged;
         AttackerPhaseLogSuffix = attackerPhaseLogSuffix ?? string.Empty;
         DefenderPhaseLogSuffix = defenderPhaseLogSuffix ?? string.Empty;
+        AfterAttackPhaseLogSuffix = afterAttackPhaseLogSuffix ?? string.Empty;
     }
 
     public string AttackerName { get; }
@@ -32,4 +34,5 @@ public sealed class BattleAttackEvent
     public bool IsDodged { get; }
     public string AttackerPhaseLogSuffix { get; }
     public string DefenderPhaseLogSuffix { get; }
+    public string AfterAttackPhaseLogSuffix { get; }
 }

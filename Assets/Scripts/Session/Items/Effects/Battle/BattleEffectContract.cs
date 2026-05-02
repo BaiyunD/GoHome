@@ -31,6 +31,7 @@ public sealed class BattleEffectContext
 
     private readonly List<string> _attackerPhaseLogParts = new List<string>(2);
     private readonly List<string> _defenderPhaseLogParts = new List<string>(2);
+    private readonly List<string> _afterAttackPhaseLogParts = new List<string>(2);
 
     public void AppendAttackerPhaseLog(string fragment)
     {
@@ -60,5 +61,20 @@ public sealed class BattleEffectContext
     public string BuildDefenderPhaseLogSuffix()
     {
         return _defenderPhaseLogParts.Count == 0 ? string.Empty : string.Concat(_defenderPhaseLogParts);
+    }
+
+    public void AppendAfterAttackPhaseLog(string fragment)
+    {
+        if (string.IsNullOrEmpty(fragment))
+        {
+            return;
+        }
+
+        _afterAttackPhaseLogParts.Add(fragment);
+    }
+
+    public string BuildAfterAttackPhaseLogSuffix()
+    {
+        return _afterAttackPhaseLogParts.Count == 0 ? string.Empty : string.Concat(_afterAttackPhaseLogParts);
     }
 }

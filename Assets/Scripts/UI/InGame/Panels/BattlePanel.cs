@@ -367,6 +367,7 @@ public class BattlePanel : MonoBehaviour
         string core = $"{attacker}使用了【{skill}】{criticalTag}，对{defender}造成{evt.Damage}点伤害{blockTag}{dodgeTag}";
         string attackerPhase = evt.AttackerPhaseLogSuffix ?? string.Empty;
         string defenderPhase = evt.DefenderPhaseLogSuffix ?? string.Empty;
+        string afterAttackPhase = evt.AfterAttackPhaseLogSuffix ?? string.Empty;
         string line = core + "。";
         if (!string.IsNullOrEmpty(attackerPhase))
         {
@@ -376,6 +377,11 @@ public class BattlePanel : MonoBehaviour
         if (!string.IsNullOrEmpty(defenderPhase))
         {
             line += defenderPhase + "。";
+        }
+
+        if (!string.IsNullOrEmpty(afterAttackPhase))
+        {
+            line += afterAttackPhase + "。";
         }
 
         return line;

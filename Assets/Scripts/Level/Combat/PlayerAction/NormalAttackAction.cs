@@ -21,6 +21,11 @@ public sealed class NormalAttackAction : IPlayerAction
             ref damage,
             out string attackerPhaseLog,
             out string defenderPhaseLog);
+        BattleItemHookRunner.RunPlayerAfterAttack(
+            context.Player,
+            context.Enemy,
+            damage,
+            out string afterAttackPhaseLog);
         result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamageEnemy, damage));
         result.SettlementLogs.Add(
             CombatSettlementLog.FromAttack(new BattleAttackEvent(
@@ -32,7 +37,8 @@ public sealed class NormalAttackAction : IPlayerAction
                 resolution.IsBlocked,
                 resolution.IsDodged,
                 attackerPhaseLog,
-                defenderPhaseLog
+                defenderPhaseLog,
+                afterAttackPhaseLog
             ))
         );
         return result;

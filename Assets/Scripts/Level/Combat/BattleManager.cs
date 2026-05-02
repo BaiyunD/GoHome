@@ -530,7 +530,8 @@ public class BattleManager : MonoBehaviour
             resolution.IsBlocked,
             resolution.IsDodged,
             enemyAttackerPhaseLog,
-            playerDefenderPhaseLog
+            playerDefenderPhaseLog,
+            null
         )));
         return result;
     }
