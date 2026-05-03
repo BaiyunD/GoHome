@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c302a691db53494ea9ff1a2672d053d, type: 3}
   m_Name: Enemy_3
   m_EditorClassIdentifier: 
-  characterName: "\u5973\u6D41\u6C13"
-  hp: 155
-  attack: 20
+  characterName: "BIG\u868A"
+  hp: 190
+  attack: 0
   defense: 0
   criticalRate: 0
   criticalDamage: 150
@@ -23,7 +23,9 @@ MonoBehaviour:
   escapeRate: 0
   traitIds: []
   enemyId: 3
-  level: 8
+  level: 10
+  battleTraits:
+  - {fileID: 11400000, guid: 783e645205810e14fbec933239dee15b, type: 2}
   canEscape: 0
   escapeRatePercent: 0
   expReward: 1

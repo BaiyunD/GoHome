@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c302a691db53494ea9ff1a2672d053d, type: 3}
-  m_Name: Enemy_1
+  m_Name: Enemy_302
   m_EditorClassIdentifier: 
-  characterName: "\u5C0F\u5C0F\u868A"
-  hp: 50
-  attack: 0
+  characterName: "\u94F6\u73AF\u86C7\uFF08\u7CBE\u82F1\uFF09"
+  hp: 105
+  attack: 1
   defense: 0
   criticalRate: 0
   criticalDamage: 150
   dodgeRate: 0
   blockRate: 0
-  escapeRate: 0
+  escapeRate: 20
   traitIds: []
-  enemyId: 1
-  level: 1
+  enemyId: 302
+  level: 6
   battleTraits: []
   canEscape: 0
   escapeRatePercent: 0

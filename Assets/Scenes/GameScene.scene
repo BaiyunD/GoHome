@@ -2299,8 +2299,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 50, y: 420}
-  m_SizeDelta: {x: 601.5908, y: 100.51}
+  m_AnchoredPosition: {x: -2.3347015, y: 420}
+  m_SizeDelta: {x: 901.43, y: 100.51}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &267300045
 MonoBehaviour:
@@ -8435,8 +8435,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 39, y: 346}
-  m_SizeDelta: {x: 337.8297, y: 68.112}
+  m_AnchoredPosition: {x: -2.3337, y: 346}
+  m_SizeDelta: {x: 901.4326, y: 68.112}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &988582193
 MonoBehaviour:
@@ -9915,7 +9915,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1188676031
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10659,9 +10659,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 198333c8e043d4a47837f030f869e23f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  supplyProbability: 60
-  randomEventProbability: 20
-  enemyProbability: 20
+  supplyProbability: 0
+  randomEventProbability: 0
+  enemyProbability: 100
   regionLootTable: {fileID: 11400000, guid: 58082b1634e2ef843a622198c970da52, type: 2}
 --- !u!1 &1261512527
 GameObject:

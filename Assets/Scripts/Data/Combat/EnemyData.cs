@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewEnemy", menuName = "GoHome/EnemyData")]
+[CreateAssetMenu(fileName = "NewEnemy", menuName = "GoHome/Enemy/EnemyData")]
 public class EnemyData : CharacterDataBase
 {
     [Header("敌人扩展")]

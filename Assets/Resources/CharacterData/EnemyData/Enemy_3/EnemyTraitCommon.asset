@@ -9,22 +9,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f0cc799f5c26be4990a4a4f81e37651, type: 3}
-  m_Name: EnemyBattleTrait_1
+  m_Script: {fileID: 11500000, guid: a3974df29962557429c8782ee1106833, type: 3}
+  m_Name: EnemyTraitCommon
   m_EditorClassIdentifier: 
-  traitDisplayName: "\u5438\u8840"
+  traitDisplayName: "\u5438\u88402"
   trigger: 1
   onlyWhenEnemyLostHpFromPlayerHit: 0
   onlyWhenPlayerLostHpFromEnemyHit: 0
   effectLines:
   - kind: 1
-    intValue: 10
+    intValue: 20
     floatValue: 0
     customNarrationFragment: 
   - kind: 20
-    intValue: 10
+    intValue: 20
     floatValue: 0
     customNarrationFragment: 
-  specialClause: 
-  specialClauseSlot: 0
-  flavorClause: "\u5636~\u5636~"
+  flavorClause: "\u55E1\u55E1\u55E1\u55E1~"
