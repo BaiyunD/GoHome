@@ -19,6 +19,8 @@ public class BattleManager : MonoBehaviour
     private BattlePhase _phase = BattlePhase.None;
     private BattleTurnSubPhase _turnSubPhase = BattleTurnSubPhase.None;
     private int _playerRuptureStackCount;
+    private int _foxSpiritDefenseStacks;
+    private int _playerBattleStartDefense;
 
     public CharacterRuntimeStats PlayerRuntime => _playerSnapshot;
     public CharacterRuntimeStats EnemyRuntime => _enemySnapshot;
@@ -121,6 +123,7 @@ public class BattleManager : MonoBehaviour
         );
         _enemySnapshot = new CharacterRuntimeStats(enemyRuntime);
         ResetBattleCombatExtras();
+        _playerBattleStartDefense = _playerSnapshot != null ? _playerSnapshot.Defense : 0;
 
         SetSubPhase(BattleTurnSubPhase.WaitPlayerInput, "BattleStart-WaitPlayerInput");
         InjectTraits();
@@ -344,6 +347,15 @@ public class BattleManager : MonoBehaviour
         CombatActionResult actionResult = BuildEnemyActionResult();
         _pendingEnemyActionResult = actionResult;
         ApplyEnemyActionResultEffects(actionResult);
+        AppendEnemyAttackAfterReceiveToSettlement(actionResult);
+        int damageDealtToPlayer = SumEffectAmount(actionResult, CombatActionEffectType.DamagePlayer);
+        EnemyBattleTraitRunner.RunAndMergeAfterEnemyAttackTraits(
+            actionResult,
+            _playerSnapshot,
+            _enemySnapshot,
+            GetEnemyBaseName(),
+            damageDealtToPlayer);
+        QueueBattleEndByHpIfNeeded();
         ApplyEnemyActionEndIntent(actionResult);
         string settlementReason = actionResult != null && actionResult.EndIntent == BattleResult.EnemyEscape
             ? "EnemyEscape-Settlement"
@@ -471,6 +483,14 @@ public class BattleManager : MonoBehaviour
                     break;
             }
         }
+
+        int damageDealtToEnemy = SumEffectAmount(result, CombatActionEffectType.DamageEnemy);
+        EnemyBattleTraitRunner.RunAndMergeReceiveHitTraits(
+            result,
+            _playerSnapshot,
+            _enemySnapshot,
+            GetEnemyBaseName(),
+            damageDealtToEnemy);
 
         QueueBattleEndByHpIfNeeded();
     }
@@ -835,12 +855,124 @@ public class BattleManager : MonoBehaviour
     private void ResetBattleCombatExtras()
     {
         _playerRuptureStackCount = 0;
+        _foxSpiritDefenseStacks = 0;
+        _playerBattleStartDefense = 0;
     }
 
     public int AdvancePlayerRuptureStackAndGetCapped()
     {
         _playerRuptureStackCount = Mathf.Min(_playerRuptureStackCount + 1, 20);
         return _playerRuptureStackCount;
+    }
+
+    public int PlayerBattleStartDefenseSnapshot => _playerBattleStartDefense;
+
+    public int FoxSpiritDefenseStacks => _foxSpiritDefenseStacks;
+
+    public bool TryIncrementFoxSpiritDefenseStack()
+    {
+        if (_foxSpiritDefenseStacks >= 20)
+        {
+            return false;
+        }
+
+        _foxSpiritDefenseStacks++;
+        return true;
+    }
+
+    private static string MergeDefenderPhaseSuffixes(string before, string after)
+    {
+        if (string.IsNullOrEmpty(after))
+        {
+            return before ?? string.Empty;
+        }
+
+        if (string.IsNullOrEmpty(before))
+        {
+            return after;
+        }
+
+        return before + "。" + after;
+    }
+
+    private void AppendEnemyAttackAfterReceiveToSettlement(CombatActionResult result)
+    {
+        if (result == null || _enemySnapshot == null || _playerSnapshot == null)
+        {
+            return;
+        }
+
+        int damageDealt = 0;
+        for (int i = 0; i < result.Effects.Count; i++)
+        {
+            CombatActionEffect effect = result.Effects[i];
+            if (effect != null && effect.EffectType == CombatActionEffectType.DamagePlayer)
+            {
+                damageDealt += Mathf.Max(0, effect.Amount);
+            }
+        }
+
+        BattleItemHookRunner.RunPlayerAfterReceiveHit(
+            _enemySnapshot,
+            _playerSnapshot,
+            damageDealt,
+            out string afterReceiveSuffix);
+        if (string.IsNullOrEmpty(afterReceiveSuffix))
+        {
+            return;
+        }
+
+        int lastIdx = result.SettlementLogs.Count - 1;
+        if (lastIdx < 0)
+        {
+            return;
+        }
+
+        CombatSettlementLog last = result.SettlementLogs[lastIdx];
+        if (last.LogType != CombatSettlementLogType.Attack || last.AttackEvent == null)
+        {
+            return;
+        }
+
+        BattleAttackEvent old = last.AttackEvent;
+        string mergedDefender = MergeDefenderPhaseSuffixes(old.DefenderPhaseLogSuffix, afterReceiveSuffix);
+        if (mergedDefender == old.DefenderPhaseLogSuffix)
+        {
+            return;
+        }
+
+        result.SettlementLogs.RemoveAt(lastIdx);
+        result.SettlementLogs.Add(CombatSettlementLog.FromAttack(new BattleAttackEvent(
+            old.AttackerName,
+            old.DefenderName,
+            old.SkillLabel,
+            old.Damage,
+            old.IsCritical,
+            old.IsBlocked,
+            old.IsDodged,
+            old.AttackerPhaseLogSuffix,
+            mergedDefender,
+            old.AfterAttackPhaseLogSuffix)));
+    }
+
+    private static int SumEffectAmount(CombatActionResult result, CombatActionEffectType effectType)
+    {
+        if (result == null || result.Effects == null)
+        {
+            return 0;
+        }
+
+        int sum = 0;
+        for (int i = 0; i < result.Effects.Count; i++)
+        {
+            CombatActionEffect effect = result.Effects[i];
+            if (effect != null && effect.EffectType == effectType)
+            {
+                sum += Mathf.Max(0, effect.Amount);
+            }
+        }
+
+        return sum;
     }
 }
 

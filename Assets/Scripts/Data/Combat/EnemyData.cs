@@ -7,6 +7,10 @@ public class EnemyData : CharacterDataBase
     [Header("敌人扩展")]
     [SerializeField] private string enemyId;
     [SerializeField] private int level = 1;
+
+    [Header("战斗特性（资产）")]
+    [Tooltip("按顺序执行；与 traitIds 无强制关联，战斗内以此列表为准。")]
+    [SerializeField] private List<EnemyBattleTraitAsset> battleTraits = new List<EnemyBattleTraitAsset>();
     [Header("敌人行为")]
     [SerializeField] private bool canEscape = false;
     [Tooltip("0~100，30 表示 30%")]
@@ -23,6 +27,8 @@ public class EnemyData : CharacterDataBase
     public int Level => level;
     public bool CanEscape => canEscape;
     public float EscapeRatePercent => CharacterDataBase.ClampRate(escapeRatePercent);
+
+    public IReadOnlyList<EnemyBattleTraitAsset> BattleTraits => battleTraits;
 }
 
 [System.Serializable]
