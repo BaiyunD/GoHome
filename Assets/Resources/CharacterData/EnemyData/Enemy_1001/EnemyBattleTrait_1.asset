@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f0cc799f5c26be4990a4a4f81e37651, type: 3}
+  m_Name: EnemyBattleTrait_1
+  m_EditorClassIdentifier: 
+  traitDisplayName: "\u5438\u8840"
+  trigger: 1
+  onlyWhenEnemyLostHpFromPlayerHit: 0
+  onlyWhenPlayerLostHpFromEnemyHit: 0
+  effectLines:
+  - kind: 1
+    intValue: 10
+    floatValue: 0
+    customNarrationFragment: 
+  - kind: 20
+    intValue: 10
+    floatValue: 0
+    customNarrationFragment: 
+  specialClause: 
+  specialClauseSlot: 0
+  flavorClause: "\u5636~\u5636~"

@@ -12,18 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c302a691db53494ea9ff1a2672d053d, type: 3}
   m_Name: Enemy_101
   m_EditorClassIdentifier: 
-  characterName: "\u5C0F\u868A"
-  hp: 100
-  attack: 40
+  characterName: "\u5C0F\u9752\uFF08\u7CBE\u82F1\uFF09"
+  hp: 157
+  attack: 0
   defense: 0
   criticalRate: 0
   criticalDamage: 150
   dodgeRate: 0
   blockRate: 0
-  escapeRate: 50
+  escapeRate: 0
   traitIds: []
-  enemyId: 0
-  level: 1
+  enemyId: 101
+  level: 8
+  battleTraits: []
+  canEscape: 0
+  escapeRatePercent: 0
   expReward: 1
   moneyReward: 1
   onWinEffects: []

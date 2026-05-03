@@ -54,4 +54,10 @@ MonoBehaviour:
     count: 3
   - itemId: 10
     count: 33
+  - itemId: 211
+    count: 2
+  - itemId: 206
+    count: 50
+  - itemId: 212
+    count: 100
   description: "\u666E\u901A\u5F00\u5C40"

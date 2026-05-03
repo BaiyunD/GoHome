@@ -9,16 +9,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dcf61dc1a3268c746a7699c2d657c19c, type: 3}
-  m_Name: PlayerData_0
+  m_Script: {fileID: 11500000, guid: 7c302a691db53494ea9ff1a2672d053d, type: 3}
+  m_Name: Enemy_3
   m_EditorClassIdentifier: 
-  characterName: 
-  hp: 200
-  attack: 40
-  defense: 20
-  criticalRate: 80
+  characterName: "\u5973\u6D41\u6C13"
+  hp: 155
+  attack: 20
+  defense: 0
+  criticalRate: 0
   criticalDamage: 150
   dodgeRate: 0
   blockRate: 0
-  escapeRate: 50
+  escapeRate: 0
   traitIds: []
+  enemyId: 3
+  level: 8
+  canEscape: 0
+  escapeRatePercent: 0
+  expReward: 1
+  moneyReward: 1
+  onWinEffects: []
+  onLoseEffects: []
+  onEscapeEffects: []

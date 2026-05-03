@@ -16,7 +16,11 @@ MonoBehaviour:
   - regionCode: 0_0
     entries:
     - enemyRef: {fileID: 11400000, guid: 71a454829b3b27b4d8ec86f2bdece45c, type: 2}
-      weight: 100
+      weight: 5
+    - enemyRef: {fileID: 11400000, guid: 65da409c8591b8542b7b3f2f98d6b028, type: 2}
+      weight: 5
+    - enemyRef: {fileID: 11400000, guid: dae0f28a516e41d43bfd9e412c5f153b, type: 2}
+      weight: 90
   - regionCode: 1_0
     entries:
     - enemyRef: {fileID: 11400000, guid: 71a454829b3b27b4d8ec86f2bdece45c, type: 2}
