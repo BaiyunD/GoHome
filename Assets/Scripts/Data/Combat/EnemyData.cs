@@ -11,6 +11,10 @@ public class EnemyData : CharacterDataBase
     [Header("战斗特性（资产）")]
     [Tooltip("按顺序执行；与 traitIds 无强制关联，战斗内以此列表为准。")]
     [SerializeField] private List<EnemyBattleTraitAsset> battleTraits = new List<EnemyBattleTraitAsset>();
+    [Header("开战叙述")]
+    [Tooltip("开战时在事件叙述弹窗显示；玩家首次操作（普攻或逃跑）后关闭并清空。可为空。")]
+    [SerializeField] private string battleOpeningTaunt;
+
     [Header("敌人行为")]
     [SerializeField] private bool canEscape = false;
     public int expReward;
@@ -24,6 +28,7 @@ public class EnemyData : CharacterDataBase
     public string EnemyId => enemyId;
     public int Level => level;
     public bool CanEscape => canEscape;
+    public string BattleOpeningTaunt => battleOpeningTaunt ?? string.Empty;
 
     public IReadOnlyList<EnemyBattleTraitAsset> BattleTraits => battleTraits;
 }

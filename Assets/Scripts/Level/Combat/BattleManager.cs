@@ -23,6 +23,7 @@ public class BattleManager : MonoBehaviour
     private int _playerBattleStartDefense;
     private int _playerPoisonStacks;
     private int _playerPoisonBaseMax;
+    private bool _battleOpeningNarrationDismissPending;
     public CharacterRuntimeStats PlayerRuntime => _playerSnapshot;
     public CharacterRuntimeStats EnemyRuntime => _enemySnapshot;
     public EnemyData EnemyTemplate => null;
@@ -82,6 +83,7 @@ public class BattleManager : MonoBehaviour
 
         _isEnding = false;
         _pendingEndResult = null;
+        _battleOpeningNarrationDismissPending = false;
         ClearPendingSettlementLogs();
         _onBattleEnd = onEnd;
         SetPhase(BattlePhase.Preparing);
@@ -141,6 +143,7 @@ public class BattleManager : MonoBehaviour
         UIManager.Instance.CloseUIEntry(UIKey.ActionBar);
         UIManager.Instance.OpenUIEntry(UIKey.Battle);
         UIManager.Instance.SetCombatStatsOpen(true);
+        ApplyBattleOpeningNarrationFromCurrentEnemy();
     }
 
     public void EndBattle(BattleResult result)
@@ -218,6 +221,8 @@ public class BattleManager : MonoBehaviour
             return false;
         }
 
+        DismissBattleOpeningNarrationIfPending();
+
         switch (command.CommandType)
         {
             case PlayerBattleCommandType.NormalAttack:
@@ -229,6 +234,46 @@ public class BattleManager : MonoBehaviour
             default:
                 return false;
         }
+    }
+
+    private void ApplyBattleOpeningNarrationFromCurrentEnemy()
+    {
+        if (UIManager.Instance == null)
+        {
+            return;
+        }
+
+        EnemyRuntime enemyRuntime = EnemyStateManager.Instance != null ? EnemyStateManager.Instance.Current : null;
+        EnemyData data = enemyRuntime != null ? enemyRuntime.RuntimeData : null;
+        string taunt = data != null ? data.BattleOpeningTaunt : string.Empty;
+        if (!string.IsNullOrWhiteSpace(taunt))
+        {
+            UIManager.Instance.ShowEventNarrationModal(taunt);
+        }
+        else
+        {
+            UIManager.Instance.ClearEventNarrationModalText();
+            UIManager.Instance.HideEventNarrationModal();
+        }
+
+        _battleOpeningNarrationDismissPending = true;
+    }
+
+    private void DismissBattleOpeningNarrationIfPending()
+    {
+        if (!_battleOpeningNarrationDismissPending)
+        {
+            return;
+        }
+
+        _battleOpeningNarrationDismissPending = false;
+        if (UIManager.Instance == null)
+        {
+            return;
+        }
+
+        UIManager.Instance.ClearEventNarrationModalText();
+        UIManager.Instance.HideEventNarrationModal();
     }
 
     public string GetEnemyDisplayName()
