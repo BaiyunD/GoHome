@@ -21,7 +21,8 @@ public class BattleManager : MonoBehaviour
     private int _playerRuptureStackCount;
     private int _foxSpiritDefenseStacks;
     private int _playerBattleStartDefense;
-
+    private int _playerPoisonStacks;
+    private int _playerPoisonBaseMax;
     public CharacterRuntimeStats PlayerRuntime => _playerSnapshot;
     public CharacterRuntimeStats EnemyRuntime => _enemySnapshot;
     public EnemyData EnemyTemplate => null;
@@ -857,6 +858,31 @@ public class BattleManager : MonoBehaviour
         _playerRuptureStackCount = 0;
         _foxSpiritDefenseStacks = 0;
         _playerBattleStartDefense = 0;
+        _playerPoisonStacks = 0;
+        _playerPoisonBaseMax = 0;
+    }
+
+    /// <summary>
+    /// 敌人中毒特性在敌攻结束时调用：单场共用一套层数，基数取 max(x)；层数 +1 后造成 层数×基数 伤害。
+    /// </summary>
+    public bool TryApplyEnemyPoisonStackFromTrait(int basePerLayer, out int damageDealt, out int stacksAfter)
+    {
+        damageDealt = 0;
+        stacksAfter = 0;
+        if (_isEnding || _playerSnapshot == null || basePerLayer <= 0)
+        {
+            return false;
+        }
+
+        _playerPoisonBaseMax = Mathf.Max(_playerPoisonBaseMax, basePerLayer);
+        _playerPoisonStacks++;
+        damageDealt = _playerPoisonStacks * _playerPoisonBaseMax;
+        _playerSnapshot.ApplyDamage(damageDealt);
+        stacksAfter = _playerPoisonStacks;
+
+        UIManager.Instance?.RefreshActiveStatsPanelInHud();
+        QueueBattleEndByHpIfNeeded();
+        return true;
     }
 
     public int AdvancePlayerRuptureStackAndGetCapped()

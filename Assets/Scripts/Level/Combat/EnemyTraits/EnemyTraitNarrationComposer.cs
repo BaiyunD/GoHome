@@ -11,8 +11,6 @@ public static class EnemyTraitNarrationComposer
         string enemyBaseName,
         string traitDisplayName,
         List<string> genericClauses,
-        string specialClause,
-        EnemyTraitSpecialClauseSlot specialSlot,
         string flavorClause)
     {
         if (string.IsNullOrEmpty(enemyBaseName) || string.IsNullOrEmpty(traitDisplayName))
@@ -22,11 +20,10 @@ public static class EnemyTraitNarrationComposer
 
         string enemy = enemyBaseName.Trim();
         string trait = traitDisplayName.Trim();
-        string special = (specialClause ?? string.Empty).Trim();
         string flavor = (flavorClause ?? string.Empty).Trim();
 
         string genericsJoined = JoinNonEmpty("，", genericClauses);
-        string body = BuildBody(genericsJoined, special, flavor, specialSlot);
+        string body = BuildBody(genericsJoined, flavor);
         if (string.IsNullOrEmpty(body))
         {
             return string.Empty;
@@ -143,27 +140,17 @@ public static class EnemyTraitNarrationComposer
         }
     }
 
-    private static string BuildBody(
-        string genericsJoined,
-        string special,
-        string flavor,
-        EnemyTraitSpecialClauseSlot slot)
+    private static string BuildBody(string genericsJoined, string flavor)
     {
         bool hasGen = !string.IsNullOrEmpty(genericsJoined);
-        bool hasSp = !string.IsNullOrEmpty(special);
         bool hasFl = !string.IsNullOrEmpty(flavor);
 
-        if (!hasGen && !hasSp && !hasFl)
+        if (!hasGen && !hasFl)
         {
             return string.Empty;
         }
 
-        if (slot == EnemyTraitSpecialClauseSlot.BeforeGeneric && hasSp)
-        {
-            return JoinNonEmpty("，", special, genericsJoined, flavor);
-        }
-
-        return JoinNonEmpty("，", genericsJoined, special, flavor);
+        return JoinNonEmpty("，", genericsJoined, flavor);
     }
 
     private static string JoinNonEmpty(string separator, params string[] parts)

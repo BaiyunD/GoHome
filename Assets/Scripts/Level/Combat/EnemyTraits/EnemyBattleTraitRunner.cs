@@ -65,7 +65,12 @@ public static class EnemyBattleTraitRunner
                 continue;
             }
 
-            string block = ExecuteTraitAndCompose(asset, player, enemy, enemyBaseName);
+            string block = ExecuteTraitAndCompose(
+                asset,
+                player,
+                enemy,
+                enemyBaseName,
+                EnemyBattleTraitHookPhase.OnEnemyReceiveHit);
             if (!string.IsNullOrEmpty(block))
             {
                 accumulated = MergeSuffixFragments(accumulated, block);
@@ -112,7 +117,12 @@ public static class EnemyBattleTraitRunner
                 continue;
             }
 
-            string block = ExecuteTraitAndCompose(asset, player, enemy, enemyBaseName);
+            string block = ExecuteTraitAndCompose(
+                asset,
+                player,
+                enemy,
+                enemyBaseName,
+                EnemyBattleTraitHookPhase.OnEnemyAttackEnd);
             if (!string.IsNullOrEmpty(block))
             {
                 accumulated = MergeSuffixFragments(accumulated, block);
@@ -131,43 +141,22 @@ public static class EnemyBattleTraitRunner
         EnemyBattleTraitAsset asset,
         CharacterRuntimeStats player,
         CharacterRuntimeStats enemy,
-        string enemyBaseName)
+        string enemyBaseName,
+        EnemyBattleTraitHookPhase hook)
     {
-        var genericClauses = new List<string>();
-        IReadOnlyList<EnemyTraitEffectLine> lines = asset.EffectLines;
-        if (lines != null)
+        var context = new EnemyTraitExecutionContext
         {
-            for (int i = 0; i < lines.Count; i++)
-            {
-                EnemyTraitEffectLine line = lines[i];
-                if (line == null || line.Kind == EnemyTraitEffectKind.None)
-                {
-                    continue;
-                }
-
-                if (!TryApplyEffectLine(line, player, enemy))
-                {
-                    continue;
-                }
-
-                if (EnemyTraitNarrationComposer.TryFormatEffectLine(line, enemyBaseName, out string clause)
-                    && !string.IsNullOrEmpty(clause))
-                {
-                    genericClauses.Add(clause);
-                }
-            }
-        }
-
-        return EnemyTraitNarrationComposer.ComposeFullBlock(
-            enemyBaseName,
-            asset.TraitDisplayName,
-            genericClauses,
-            asset.SpecialClause,
-            asset.SpecialClauseSlot,
-            asset.FlavorClause);
+            Player = player,
+            Enemy = enemy,
+            EnemyBaseName = enemyBaseName,
+            Hook = hook,
+        };
+        return asset.TryExecuteAndCompose(ref context, out string block) && !string.IsNullOrEmpty(block)
+            ? block
+            : string.Empty;
     }
 
-    private static bool TryApplyEffectLine(EnemyTraitEffectLine line, CharacterRuntimeStats player, CharacterRuntimeStats enemy)
+    internal static bool TryApplyEffectLine(EnemyTraitEffectLine line, CharacterRuntimeStats player, CharacterRuntimeStats enemy)
     {
         if (line == null || player == null || enemy == null)
         {
