@@ -1,8 +1,10 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "EnemyBattleTrait", menuName = "GoHome/Combat/Enemy Battle Trait")]
-public sealed class EnemyBattleTraitAsset : ScriptableObject
+/// <summary>
+/// 敌人战斗特性数据基类（无 Create 菜单）。通用模版见 <see cref="EnemyBattleTraitCommonAsset"/>；
+/// 特殊机制为直接继承本类的叶子类型（例如 <see cref="EnemyPoisonStackBattleTrait"/>）。
+/// </summary>
+public class EnemyBattleTraitAsset : ScriptableObject
 {
     [SerializeField] private string traitDisplayName = "特性";
 
@@ -14,22 +16,14 @@ public sealed class EnemyBattleTraitAsset : ScriptableObject
     [Tooltip("勾选后仅当本下对玩家实际扣血大于 0 时触发（用于 OnEnemyAttackEnd）。")]
     [SerializeField] private bool onlyWhenPlayerLostHpFromEnemyHit;
 
-    [SerializeField] private List<EnemyTraitEffectLine> effectLines = new List<EnemyTraitEffectLine>();
-
-    [TextArea(1, 3)]
-    [SerializeField] private string specialClause = string.Empty;
-
-    [SerializeField] private EnemyTraitSpecialClauseSlot specialClauseSlot = EnemyTraitSpecialClauseSlot.None;
-
-    [TextArea(1, 3)]
-    [SerializeField] private string flavorClause = string.Empty;
-
     public string TraitDisplayName => traitDisplayName ?? string.Empty;
     public EnemyBattleTraitTrigger Trigger => trigger;
     public bool OnlyWhenEnemyLostHpFromPlayerHit => onlyWhenEnemyLostHpFromPlayerHit;
     public bool OnlyWhenPlayerLostHpFromEnemyHit => onlyWhenPlayerLostHpFromEnemyHit;
-    public IReadOnlyList<EnemyTraitEffectLine> EffectLines => effectLines;
-    public string SpecialClause => specialClause ?? string.Empty;
-    public EnemyTraitSpecialClauseSlot SpecialClauseSlot => specialClauseSlot;
-    public string FlavorClause => flavorClause ?? string.Empty;
+
+    public virtual bool TryExecuteAndCompose(ref EnemyTraitExecutionContext context, out string bracketBlock)
+    {
+        bracketBlock = null;
+        return false;
+    }
 }
