@@ -24,9 +24,9 @@ MonoBehaviour:
   traitIds: []
   enemyId: 302
   level: 6
-  battleTraits: []
+  battleTraits:
+  - {fileID: 11400000, guid: d859e77288dc69c4aaa5095362e18c2e, type: 2}
   canEscape: 0
-  escapeRatePercent: 0
   expReward: 1
   moneyReward: 1
   onWinEffects: []

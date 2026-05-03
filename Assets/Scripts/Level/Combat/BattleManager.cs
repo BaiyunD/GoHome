@@ -183,6 +183,13 @@ public class BattleManager : MonoBehaviour
             TraitManager.Instance.ClearOwnerTraits(TraitOwner.Enemy);
         }
 
+        string enemyEscapeNarrationName = null;
+        if (result == BattleResult.EnemyEscape)
+        {
+            string name = GetEnemyBaseName();
+            enemyEscapeNarrationName = string.IsNullOrWhiteSpace(name) ? null : name;
+        }
+
         _onBattleEnd?.Invoke(result);
         _onBattleEnd = null;
         _playerSnapshot = null;
@@ -193,7 +200,7 @@ public class BattleManager : MonoBehaviour
             EnemyStateManager.Instance.ClearCurrent();
         }
 
-        string narration = BuildBattleEndNarration(result);
+        string narration = BuildBattleEndNarration(result, enemyEscapeNarrationName);
         BattleEnded?.Invoke(new BattleEndEvent(result, narration));
         if (UIManager.Instance != null && !string.IsNullOrWhiteSpace(narration))
         {
@@ -347,16 +354,21 @@ public class BattleManager : MonoBehaviour
         SetSubPhase(BattleTurnSubPhase.EnemyAction, "EnemyNormalAttack-Action");
         CombatActionResult actionResult = BuildEnemyActionResult();
         _pendingEnemyActionResult = actionResult;
-        ApplyEnemyActionResultEffects(actionResult);
-        AppendEnemyAttackAfterReceiveToSettlement(actionResult);
-        int damageDealtToPlayer = SumEffectAmount(actionResult, CombatActionEffectType.DamagePlayer);
-        EnemyBattleTraitRunner.RunAndMergeAfterEnemyAttackTraits(
-            actionResult,
-            _playerSnapshot,
-            _enemySnapshot,
-            GetEnemyBaseName(),
-            damageDealtToPlayer);
-        QueueBattleEndByHpIfNeeded();
+        bool enemyEscaped = actionResult != null && actionResult.EndIntent == BattleResult.EnemyEscape;
+        if (!enemyEscaped)
+        {
+            ApplyEnemyActionResultEffects(actionResult);
+            AppendEnemyAttackAfterReceiveToSettlement(actionResult);
+            int damageDealtToPlayer = SumEffectAmount(actionResult, CombatActionEffectType.DamagePlayer);
+            EnemyBattleTraitRunner.RunAndMergeAfterEnemyAttackTraits(
+                actionResult,
+                _playerSnapshot,
+                _enemySnapshot,
+                GetEnemyBaseName(),
+                damageDealtToPlayer);
+            QueueBattleEndByHpIfNeeded();
+        }
+
         ApplyEnemyActionEndIntent(actionResult);
         string settlementReason = actionResult != null && actionResult.EndIntent == BattleResult.EnemyEscape
             ? "EnemyEscape-Settlement"
@@ -518,9 +530,11 @@ public class BattleManager : MonoBehaviour
         bool canEscape = enemyRuntime != null && enemyRuntime.CanEscape;
         if (canEscape)
         {
-            float escapeRatePercent = enemyRuntime != null ? enemyRuntime.EscapeRatePercent : 0f;
+            float escapeRateClamped = enemyRuntime != null
+                ? CharacterDataBase.ClampRate(enemyRuntime.EscapeRate)
+                : 0f;
             float roll = UnityEngine.Random.Range(0f, 100f);
-            if (roll <= escapeRatePercent)
+            if (roll <= escapeRateClamped)
             {
                 result.EndIntent = BattleResult.EnemyEscape;
                 return result;
@@ -752,7 +766,7 @@ public class BattleManager : MonoBehaviour
         return _playerSnapshot != null && _enemySnapshot != null;
     }
 
-    private static string BuildBattleEndNarration(BattleResult result)
+    private static string BuildBattleEndNarration(BattleResult result, string enemyEscapeDisplayName = null)
     {
         switch (result)
         {
@@ -763,7 +777,12 @@ public class BattleManager : MonoBehaviour
             case BattleResult.Escape:
                 return "你成功逃离了战斗。";
             case BattleResult.EnemyEscape:
-                return "敌人逃离了战斗。";
+                if (!string.IsNullOrWhiteSpace(enemyEscapeDisplayName))
+                {
+                    return $"{enemyEscapeDisplayName}逃跑了~";
+                }
+
+                return "敌人逃跑了~";
             default:
                 return string.Empty;
         }
