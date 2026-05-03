@@ -26,6 +26,7 @@ MonoBehaviour:
   level: 10
   battleTraits:
   - {fileID: 11400000, guid: 783e645205810e14fbec933239dee15b, type: 2}
+  - {fileID: 11400000, guid: fb839d448ffb4c968bca1474fd98a05f, type: 2}
   canEscape: 0
   escapeRatePercent: 0
   expReward: 1
