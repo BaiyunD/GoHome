@@ -215,8 +215,6 @@ public class BattleManager : MonoBehaviour
                 ? EnemyStateManager.Instance.Current.RuntimeData
                 : null);
 
-        _onBattleEnd?.Invoke(result);
-        _onBattleEnd = null;
         _playerSnapshot = null;
         _enemySnapshot = null;
         ResetBattleCombatExtras();
@@ -236,6 +234,10 @@ public class BattleManager : MonoBehaviour
             BaseVictoryMaxHpDelta);
 
         UIManager.Instance?.UpdateInfo();
+
+        // 结算发奖后再通知流程侧，避免回调内读档/重置先把 PlayerRuntime 洗掉。
+        _onBattleEnd?.Invoke(result);
+        _onBattleEnd = null;
 
         BattleEnded?.Invoke(new BattleEndEvent(result, narration));
         if (UIManager.Instance != null && !string.IsNullOrWhiteSpace(narration))

@@ -98,7 +98,7 @@ public class PlayerStateManager : MonoBehaviour
         return true;
     }
 
-    public bool ApplySaveSnapshot(SavePlayerData snapshot, out string errorMessage)
+    public bool ApplySaveSnapshot(SavePlayerData snapshot, int saveFormatVersion, out string errorMessage)
     {
         if (snapshot == null)
         {
@@ -108,11 +108,11 @@ public class PlayerStateManager : MonoBehaviour
 
         if (Current == null)
         {
-            PlayerData runtimeData = CreateRuntimeDataFromSnapshot(snapshot);
-            Current = new PlayerRuntime(runtimeData, null);
+            Current = PlayerRuntime.CreateForLoadBeforeSnapshot();
         }
 
-        ApplySnapshotToRuntime(Current, snapshot);
+        Current.CombatItemPassive = default;
+        Current.ApplyCombatBaseFromSaveSnapshot(snapshot, saveFormatVersion);
         PlayerRuntimeChanged?.Invoke(Current);
         errorMessage = string.Empty;
         return true;
@@ -129,28 +129,5 @@ public class PlayerStateManager : MonoBehaviour
         return Current.ResetFromStartConfig(_currentStartGameConfig, out errorMessage);
     }
 
-    private static void ApplySnapshotToRuntime(PlayerRuntime runtime, SavePlayerData snapshot)
-    {
-        if (runtime == null || snapshot == null)
-        {
-            return;
-        }
-
-        float safeMax = Mathf.Max(0f, snapshot.HPMax);
-        runtime.MaxHp = safeMax;
-        runtime.CurrentHp = Mathf.Clamp(snapshot.HPCurrent, 0f, safeMax);
-        runtime.Attack = snapshot.Attack;
-        runtime.Defense = snapshot.Defense;
-        runtime.CriticalRate = snapshot.CriticalRate;
-        runtime.CriticalDamage = snapshot.CriticalDamage;
-        runtime.BlockRate = snapshot.BlockRate;
-        runtime.DodgeRate = snapshot.DodgeRate;
-        runtime.MoneyCents = MoneyUtil.ClampNonNegativeCents(snapshot.MoneyCents);
-    }
-
-    private static PlayerData CreateRuntimeDataFromSnapshot(SavePlayerData snapshot)
-    {
-        return ScriptableObject.CreateInstance<PlayerData>();
-    }
 }
 

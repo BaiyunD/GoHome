@@ -41,49 +41,49 @@ public class StatResultHelper
                 Debug.LogWarning("StatResultHelper -> Money 当前未接入运行态，已跳过。");
                 break;
             case ResultType.Attack:
-                ApplyToPlayerValue(
+                ApplyToFinalCombatStat(
                     () => playerRuntime.Attack,
-                    value => playerRuntime.Attack = value,
+                    playerRuntime.ApplyFinalAttackValueAfterOperation,
                     null,
                     result
                 );
                 break;
             case ResultType.Defense:
-                ApplyToPlayerValue(
+                ApplyToFinalCombatStat(
                     () => playerRuntime.Defense,
-                    value => playerRuntime.Defense = value,
+                    playerRuntime.ApplyFinalDefenseValueAfterOperation,
                     null,
                     result
                 );
                 break;
             case ResultType.CriticalRate:
-                ApplyToPlayerValue(
+                ApplyToFinalCombatStat(
                     () => playerRuntime.CriticalRate,
-                    value => playerRuntime.CriticalRate = value,
+                    playerRuntime.ApplyFinalCriticalRateValueAfterOperation,
                     null,
                     result
                 );
                 break;
             case ResultType.CriticalDamage:
-                ApplyToPlayerValue(
+                ApplyToFinalCombatStat(
                     () => playerRuntime.CriticalDamage,
-                    value => playerRuntime.CriticalDamage = value,
+                    playerRuntime.ApplyFinalCriticalDamageValueAfterOperation,
                     null,
                     result
                 );
                 break;
             case ResultType.BlockRate:
-                ApplyToPlayerValue(
+                ApplyToFinalCombatStat(
                     () => playerRuntime.BlockRate,
-                    value => playerRuntime.BlockRate = value,
+                    playerRuntime.ApplyFinalBlockRateValueAfterOperation,
                     null,
                     result
                 );
                 break;
             case ResultType.DodgeRate:
-                ApplyToPlayerValue(
+                ApplyToFinalCombatStat(
                     () => playerRuntime.DodgeRate,
-                    value => playerRuntime.DodgeRate = value,
+                    playerRuntime.ApplyFinalDodgeRateValueAfterOperation,
                     null,
                     result
                 );
@@ -131,6 +131,62 @@ public class StatResultHelper
                 Debug.LogWarning("Distance 不支持 MaxPercent 操作（当前没有 Max 概念）");
                 break;
         }
+    }
+
+    /// <summary>按「当前最终面板」运算后，通过回调写回 Base（扣被动层）。</summary>
+    private static void ApplyToFinalCombatStat(
+        Func<float> getter,
+        Action<float> applyFinalValue,
+        float? maxValue,
+        StatResult result
+    )
+    {
+        if (getter == null || applyFinalValue == null)
+        {
+            return;
+        }
+
+        float currentValue = getter();
+        float baseForMax = maxValue.HasValue ? maxValue.Value : currentValue;
+        float nextValue = currentValue;
+
+        switch (result.operation)
+        {
+            case ResultOperation.Add:
+                nextValue = currentValue + result.value;
+                break;
+            case ResultOperation.Subtract:
+                nextValue = currentValue - result.value;
+                break;
+            case ResultOperation.Set:
+                nextValue = result.value;
+                break;
+            case ResultOperation.AddPercent:
+                nextValue = currentValue + currentValue * result.value;
+                break;
+            case ResultOperation.SubtractPercent:
+                nextValue = currentValue - currentValue * result.value;
+                break;
+            case ResultOperation.SetPercent:
+                nextValue = currentValue * result.value;
+                break;
+            case ResultOperation.AddMaxPercent:
+                nextValue = currentValue + baseForMax * result.value;
+                break;
+            case ResultOperation.SubtractMaxPercent:
+                nextValue = currentValue - baseForMax * result.value;
+                break;
+            case ResultOperation.SetMaxPercent:
+                nextValue = baseForMax * result.value;
+                break;
+        }
+
+        if (maxValue.HasValue)
+        {
+            nextValue = Mathf.Clamp(nextValue, 0f, Mathf.Max(0f, maxValue.Value));
+        }
+
+        applyFinalValue(nextValue);
     }
 
     private static void ApplyToPlayerValue(

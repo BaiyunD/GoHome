@@ -13,6 +13,7 @@ public class SaveSnapshotAssembler
         FillTraits(saveData.Traits);
         FillItems(saveData.Items);
         FillShop(saveData.Shop);
+        saveData.Version = PlayerCombatStatCalculator.SaveFormatCombatLayers;
         return saveData;
     }
 
@@ -37,12 +38,13 @@ public class SaveSnapshotAssembler
         }
 
         EnsurePlayerInitialized();
-        ApplyPlayer(saveData.Player);
+        ApplyPlayer(saveData.Player, saveData.Version);
         ApplyRoute(saveData.Route);
         ApplyInventory(saveData.Inventory);
         ApplyTraits(saveData.Traits);
         ApplyItems(saveData.Items);
         ApplyShop(saveData.Shop);
+        RebuildPlayerPassiveFromInventory();
 
         if (UIManager.Instance != null)
         {
@@ -62,7 +64,7 @@ public class SaveSnapshotAssembler
 
         PlayerRuntime runtime = PlayerStateManager.Instance.Current;
         playerData.HPCurrent = runtime.CurrentHp;
-        playerData.HPMax = runtime.MaxHp;
+        playerData.HPMax = runtime.CombatBase.MaxHp;
         if (SurvivalResourceManager.Instance != null)
         {
             SurvivalResourceManager.Instance.FillSnapshot(playerData);
@@ -77,12 +79,14 @@ public class SaveSnapshotAssembler
             playerData.HealthMax = 0f;
         }
         playerData.MoneyCents = runtime.MoneyCents;
-        playerData.Attack = runtime.Attack;
-        playerData.Defense = runtime.Defense;
-        playerData.CriticalRate = runtime.CriticalRate;
-        playerData.CriticalDamage = runtime.CriticalDamage;
-        playerData.BlockRate = runtime.BlockRate;
-        playerData.DodgeRate = runtime.DodgeRate;
+        playerData.Attack = runtime.CombatBase.Attack;
+        playerData.Defense = runtime.CombatBase.Defense;
+        playerData.CriticalRate = runtime.CombatBase.CriticalRate;
+        playerData.CriticalDamage = runtime.CombatBase.CriticalDamage;
+        playerData.BlockRate = runtime.CombatBase.BlockRate;
+        playerData.DodgeRate = runtime.CombatBase.DodgeRate;
+        playerData.EscapeRate = runtime.CombatBase.EscapeRate;
+        playerData.DisplayName = runtime.DisplayName ?? string.Empty;
     }
 
     private static void FillRoute(SaveRouteData routeData)
@@ -173,14 +177,23 @@ public class SaveSnapshotAssembler
         }
     }
 
-    private static void ApplyPlayer(SavePlayerData playerData)
+    private static void ApplyPlayer(SavePlayerData playerData, int saveFormatVersion)
     {
         if (playerData == null || PlayerStateManager.Instance == null)
         {
             return;
         }
 
-        PlayerStateManager.Instance.ApplySaveSnapshot(playerData, out _);
+        PlayerStateManager.Instance.ApplySaveSnapshot(playerData, saveFormatVersion, out _);
+    }
+
+    private static void RebuildPlayerPassiveFromInventory()
+    {
+        PassiveSystem passiveSystem = UnityEngine.Object.FindFirstObjectByType<PassiveSystem>();
+        if (passiveSystem != null && PlayerStateManager.Instance != null && PlayerStateManager.Instance.Current != null)
+        {
+            passiveSystem.Rebuild();
+        }
     }
 
     private static void ApplyRoute(SaveRouteData routeData)

@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public int Version = 3;
+    public int Version = 4;
     public SavePlayerData Player = new SavePlayerData();
     public SaveRouteData Route = new SaveRouteData();
     public SaveInventoryData Inventory = new SaveInventoryData();
@@ -32,6 +32,10 @@ public class SavePlayerData
     public float CriticalDamage;
     public float BlockRate;
     public float DodgeRate;
+    /// <summary>v4+：角色自身脱战率（Base），与 <see cref="PlayerCombatStatCalculator.Combine"/> 尺度一致（0~100）。</summary>
+    public float EscapeRate;
+    /// <summary>v4+：展示用名称；不进 Trait 存档分区。</summary>
+    public string DisplayName;
 }
 
 [Serializable]
