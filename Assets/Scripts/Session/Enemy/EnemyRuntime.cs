@@ -10,6 +10,7 @@ public sealed class EnemyRuntime
 
     public string EnemyId { get; private set; }
     public int Level { get; private set; }
+    public EnemyKind Kind { get; private set; }
     public string DisplayName { get; private set; }
     public float EscapeRate { get; private set; }
     public bool CanEscape { get; private set; }
@@ -36,6 +37,7 @@ public sealed class EnemyRuntime
         EnemyData data = RuntimeData;
         EnemyId = data != null ? data.EnemyId : string.Empty;
         Level = data != null ? data.Level : 1;
+        Kind = data != null ? data.Kind : EnemyKind.Minion;
         DisplayName = data != null ? data.CharacterName : string.Empty;
         EscapeRate = data != null ? data.EscapeRate : 0f;
         CanEscape = data != null && data.CanEscape;

@@ -24,6 +24,7 @@ public class BattleManager : MonoBehaviour
     private int _playerPoisonStacks;
     private int _playerPoisonBaseMax;
     private bool _battleOpeningNarrationDismissPending;
+    private EnemyKind _battleEnemyKind;
 
     [Header("胜利基础奖励")]
     [Tooltip("战斗胜利时随机三选一：攻击永久加成（点）。")]
@@ -105,6 +106,7 @@ public class BattleManager : MonoBehaviour
         _onBattleEnd = onEnd;
         SetPhase(BattlePhase.Preparing);
         SetSubPhase(BattleTurnSubPhase.None, "BattleStart-Preparing");
+        _battleEnemyKind = EnemyKind.Minion;
 
         if (EnemyStateManager.Instance == null)
         {
@@ -142,6 +144,9 @@ public class BattleManager : MonoBehaviour
             PlayerStateManager.Instance.Current.EscapeRate
         );
         _enemySnapshot = new CharacterRuntimeStats(enemyRuntime);
+        _battleEnemyKind = enemyRuntime.RuntimeData != null
+            ? enemyRuntime.RuntimeData.Kind
+            : EnemyKind.Minion;
         ResetBattleCombatExtras();
         _playerBattleStartDefense = _playerSnapshot != null ? _playerSnapshot.Defense : 0;
 
@@ -227,19 +232,23 @@ public class BattleManager : MonoBehaviour
             result,
             enemyEscapeNarrationName,
             rewardSnapshot);
+        int victoryTierMult = VictoryTierMultiplier(_battleEnemyKind);
+        int victoryAtk = Mathf.Max(0, BaseVictoryAttackDelta * victoryTierMult);
+        int victoryDef = Mathf.Max(0, BaseVictoryDefenseDelta * victoryTierMult);
+        int victoryHp = Mathf.Max(0, BaseVictoryMaxHpDelta * victoryTierMult);
         string narration = BattleSettlementRelay.Dispatch(
             settlementContext,
-            BaseVictoryAttackDelta,
-            BaseVictoryDefenseDelta,
-            BaseVictoryMaxHpDelta);
+            victoryAtk,
+            victoryDef,
+            victoryHp);
 
         if (result == BattleResult.Win && rewardSnapshot != null)
         {
             BattleVictorySettlementContext victoryCtx = new BattleVictorySettlementContext(
                 rewardSnapshot,
-                BaseVictoryAttackDelta,
-                BaseVictoryDefenseDelta,
-                BaseVictoryMaxHpDelta);
+                victoryAtk,
+                victoryDef,
+                victoryHp);
             string victorySuffix = ItemEffectDispatcher.AppendBattleVictorySettlement(victoryCtx);
             if (!string.IsNullOrEmpty(victorySuffix))
             {
@@ -267,6 +276,7 @@ public class BattleManager : MonoBehaviour
         }
 
         SetPhase(BattlePhase.None);
+        _battleEnemyKind = EnemyKind.Minion;
         _isEnding = false;
     }
 
@@ -342,7 +352,8 @@ public class BattleManager : MonoBehaviour
 
         string name = _enemySnapshot != null ? _enemySnapshot.Name : enemyRuntime.DisplayName;
         int level = enemyRuntime != null ? enemyRuntime.Level : 1;
-        return $"{name} LV{level}";
+        EnemyKind kind = ResolveBattleEnemyKind();
+        return FormatEnemyPanelTitle(name, level, kind);
     }
 
     private string GetEnemyBaseName()
@@ -355,6 +366,48 @@ public class BattleManager : MonoBehaviour
 
         string name = _enemySnapshot != null ? _enemySnapshot.Name : enemyRuntime.DisplayName;
         return string.IsNullOrWhiteSpace(name) ? string.Empty : name;
+    }
+
+    private static int VictoryTierMultiplier(EnemyKind kind)
+    {
+        if (kind == EnemyKind.Elite)
+        {
+            return 2;
+        }
+
+        if (kind == EnemyKind.Boss)
+        {
+            return 3;
+        }
+
+        return 1;
+    }
+
+    private EnemyKind ResolveBattleEnemyKind()
+    {
+        EnemyRuntime enemyRuntime = EnemyStateManager.Instance != null ? EnemyStateManager.Instance.Current : null;
+        if (enemyRuntime != null)
+        {
+            return enemyRuntime.Kind;
+        }
+
+        return _battleEnemyKind;
+    }
+
+    private static string FormatEnemyPanelTitle(string baseName, int level, EnemyKind kind)
+    {
+        string name = string.IsNullOrEmpty(baseName) ? string.Empty : baseName;
+        if (kind == EnemyKind.Elite)
+        {
+            return $"{name}（精英） LV{level}";
+        }
+
+        if (kind == EnemyKind.Boss)
+        {
+            return $"{name}（BOSS） LV{level}";
+        }
+
+        return $"{name} LV{level}";
     }
 
     public string GetPlayerHpDisplay()

@@ -2,6 +2,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum EnemyKind
+{
+    Minion = 0,
+    Elite = 1,
+    Boss = 2
+}
+
 [System.Serializable]
 public sealed class BattleRewardEntry
 {
@@ -35,6 +42,9 @@ public class EnemyData : CharacterDataBase
     [Header("敌人行为")]
     [SerializeField] private bool canEscape = false;
 
+    [Header("敌人分类")]
+    [SerializeField] private EnemyKind enemyKind = EnemyKind.Minion;
+
     [Header("战斗结算奖励")]
     [Tooltip("胜利时发放：物品或金钱条目；可为空。")]
     [SerializeField] private List<BattleRewardEntry> commonRewards = new List<BattleRewardEntry>();
@@ -47,6 +57,7 @@ public class EnemyData : CharacterDataBase
 
     public string EnemyId => enemyId;
     public int Level => level;
+    public EnemyKind Kind => enemyKind;
     public bool CanEscape => canEscape;
     public string BattleOpeningTaunt => battleOpeningTaunt ?? string.Empty;
 
