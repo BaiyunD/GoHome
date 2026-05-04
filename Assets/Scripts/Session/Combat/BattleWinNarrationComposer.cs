@@ -18,6 +18,7 @@ public static class BattleWinNarrationComposer
             sb.Append("！");
         }
 
+        int commonEffectiveCount = 0;
         List<string> allAcquire = new List<string>();
         if (commonAcquireParts != null)
         {
@@ -26,9 +27,15 @@ public static class BattleWinNarrationComposer
                 string p = commonAcquireParts[i];
                 if (!string.IsNullOrWhiteSpace(p))
                 {
+                    commonEffectiveCount++;
                     allAcquire.Add(p);
                 }
             }
+        }
+
+        if (commonEffectiveCount == 0)
+        {
+            sb.Append("没发现掉落物！");
         }
 
         if (extraAcquireParts != null)
