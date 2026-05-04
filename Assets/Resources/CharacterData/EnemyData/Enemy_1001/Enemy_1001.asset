@@ -27,9 +27,29 @@ MonoBehaviour:
   battleTraits:
   - {fileID: 11400000, guid: e5fa437135d27eb48b718797dd6f7258, type: 2}
   - {fileID: 11400000, guid: dd6b1d2466aceeb469f41e6366942406, type: 2}
+  battleOpeningTaunt: "\u5495\u5495\u560E\u560E\uFF01"
   canEscape: 0
   expReward: 1
   moneyReward: 1
+  commonRewards:
+  - kind: 1
+    itemId: 1
+    itemCount: 100
+    moneyYuan: 0
+  - kind: 2
+    itemId: 1
+    itemCount: 100
+    moneyYuan: 200
+  - kind: 2
+    itemId: 1
+    itemCount: 100
+    moneyYuan: 0.1
+  extraRewards:
+  - kind: 1
+    itemId: 1
+    itemCount: 1
+    moneyYuan: 0
+  extraVictoryDescription: "\u59D0\u59D0\u6709\u70B9\u5174\u594B\u4E86>v<\uFF0C\u4F60\u83B7\u5F97\u4E861\u4E2A\u6728\u6750"
   onWinEffects: []
   onLoseEffects: []
   onEscapeEffects: []

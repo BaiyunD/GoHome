@@ -24,6 +24,17 @@ public class BattleManager : MonoBehaviour
     private int _playerPoisonStacks;
     private int _playerPoisonBaseMax;
     private bool _battleOpeningNarrationDismissPending;
+
+    [Header("胜利基础奖励")]
+    [Tooltip("战斗胜利时随机三选一：攻击永久加成（点）。")]
+    [SerializeField] private int baseVictoryAttackDelta = 1;
+
+    [Tooltip("战斗胜利时随机三选一：防御永久加成（点）。")]
+    [SerializeField] private int baseVictoryDefenseDelta = 1;
+
+    [Tooltip("战斗胜利时随机三选一：最大生命永久加成（点）。")]
+    [SerializeField] private int baseVictoryMaxHpDelta = 5;
+
     public CharacterRuntimeStats PlayerRuntime => _playerSnapshot;
     public CharacterRuntimeStats EnemyRuntime => _enemySnapshot;
     public EnemyData EnemyTemplate => null;
@@ -31,6 +42,12 @@ public class BattleManager : MonoBehaviour
     public BattleTurnSubPhase TurnSubPhase => _turnSubPhase;
     public bool ControlsVisible => _controlsVisible;
     public bool ControlsInteractable => _controlsInteractable;
+
+    public int BaseVictoryAttackDelta => Mathf.Max(0, baseVictoryAttackDelta);
+
+    public int BaseVictoryDefenseDelta => Mathf.Max(0, baseVictoryDefenseDelta);
+
+    public int BaseVictoryMaxHpDelta => Mathf.Max(0, baseVictoryMaxHpDelta);
 
     public event Action<BattleAttackEvent> PlayerAttackResolved;
     public event Action<BattleAttackEvent> EnemyAttackResolved;
@@ -193,6 +210,11 @@ public class BattleManager : MonoBehaviour
             enemyEscapeNarrationName = string.IsNullOrWhiteSpace(name) ? null : name;
         }
 
+        BattleSettlementRewardSnapshot rewardSnapshot = BattleSettlementRewardSnapshot.FromEnemyData(
+            EnemyStateManager.Instance != null && EnemyStateManager.Instance.Current != null
+                ? EnemyStateManager.Instance.Current.RuntimeData
+                : null);
+
         _onBattleEnd?.Invoke(result);
         _onBattleEnd = null;
         _playerSnapshot = null;
@@ -203,7 +225,18 @@ public class BattleManager : MonoBehaviour
             EnemyStateManager.Instance.ClearCurrent();
         }
 
-        string narration = BuildBattleEndNarration(result, enemyEscapeNarrationName);
+        BattleSettlementContext settlementContext = new BattleSettlementContext(
+            result,
+            enemyEscapeNarrationName,
+            rewardSnapshot);
+        string narration = BattleSettlementRelay.Dispatch(
+            settlementContext,
+            BaseVictoryAttackDelta,
+            BaseVictoryDefenseDelta,
+            BaseVictoryMaxHpDelta);
+
+        UIManager.Instance?.UpdateInfo();
+
         BattleEnded?.Invoke(new BattleEndEvent(result, narration));
         if (UIManager.Instance != null && !string.IsNullOrWhiteSpace(narration))
         {
@@ -454,12 +487,19 @@ public class BattleManager : MonoBehaviour
             return new BattleEndEvaluation(false, BattleResult.None, "InvalidRuntimeState");
         }
 
-        if (_enemySnapshot.CurrentHp <= 0)
+        bool playerDead = _playerSnapshot.CurrentHp <= 0;
+        bool enemyDead = _enemySnapshot.CurrentHp <= 0;
+        if (playerDead && enemyDead)
+        {
+            return new BattleEndEvaluation(true, BattleResult.Lose, "BothHpDepletedPlayerLoses");
+        }
+
+        if (enemyDead)
         {
             return new BattleEndEvaluation(true, BattleResult.Win, "EnemyHpDepleted");
         }
 
-        if (_playerSnapshot.CurrentHp <= 0)
+        if (playerDead)
         {
             return new BattleEndEvaluation(true, BattleResult.Lose, "PlayerHpDepleted");
         }
@@ -809,28 +849,6 @@ public class BattleManager : MonoBehaviour
         }
 
         return _playerSnapshot != null && _enemySnapshot != null;
-    }
-
-    private static string BuildBattleEndNarration(BattleResult result, string enemyEscapeDisplayName = null)
-    {
-        switch (result)
-        {
-            case BattleResult.Win:
-                return "战斗胜利。";
-            case BattleResult.Lose:
-                return "战斗失败。";
-            case BattleResult.Escape:
-                return "你成功逃离了战斗。";
-            case BattleResult.EnemyEscape:
-                if (!string.IsNullOrWhiteSpace(enemyEscapeDisplayName))
-                {
-                    return $"{enemyEscapeDisplayName}逃跑了~";
-                }
-
-                return "敌人逃跑了~";
-            default:
-                return string.Empty;
-        }
     }
 
     private void SyncPlayerHealthBack()

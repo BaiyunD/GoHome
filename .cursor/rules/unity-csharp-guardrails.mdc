@@ -26,10 +26,11 @@ alwaysApply: false
 
 - 组件获取：优先 `GetComponent`，不要为了省事用 `FindObjectOfType`。
 - 协程：协程方法名以 `Coroutine` 结尾（如 `WaitForAttackCoroutine`）。
+- **`.meta`**：**禁止** 为新建资源 **手写或新建** `Assets/` 下的 `.meta`；不要 **无故修改** 已有 `.meta`。细则与例外见 **`project-workflow.mdc`** 中「**Unity 资源与 .meta**」。
 
 ## 代码格式/禁止项
 
 - 大括号换行（Allman），缩进 4 空格（不用 Tab），每行尽量不超过 100 字符。
 - `using` 放文件顶部并按字母序排列（但：**不要因为“整理”而新增/移除 using**，除非修改内容必须）。
-- 不要重新排列类成员顺序；不要修改命名空间；不要修改任何 `.meta` 文件。
+- 不要重新排列类成员顺序；不要修改命名空间；**不要无故修改** `.meta`（新建与提交流程见 `project-workflow.mdc`「Unity 资源与 .meta」）。
 

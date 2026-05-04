@@ -20,12 +20,13 @@ MonoBehaviour:
   criticalDamage: 150
   dodgeRate: 0
   blockRate: 0
-  escapeRate: 20
+  escapeRate: 0
   traitIds: []
   enemyId: 302
   level: 6
   battleTraits:
   - {fileID: 11400000, guid: d859e77288dc69c4aaa5095362e18c2e, type: 2}
+  battleOpeningTaunt: 
   canEscape: 0
   expReward: 1
   moneyReward: 1

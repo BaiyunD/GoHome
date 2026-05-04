@@ -25,7 +25,8 @@ MonoBehaviour:
   enemyId: 301
   level: 1
   battleTraits: []
-  canEscape: 0
+  battleOpeningTaunt: 
+  canEscape: 1
   expReward: 1
   moneyReward: 1
   onWinEffects: []

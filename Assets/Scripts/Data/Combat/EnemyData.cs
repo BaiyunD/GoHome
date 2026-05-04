@@ -1,5 +1,22 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+
+[System.Serializable]
+public sealed class BattleRewardEntry
+{
+    public enum RewardKind
+    {
+        None = 0,
+        Item = 1,
+        Money = 2
+    }
+
+    public RewardKind kind;
+    public int itemId;
+    public int itemCount;
+    public float moneyYuan;
+}
 
 [CreateAssetMenu(fileName = "NewEnemy", menuName = "GoHome/Enemy/EnemyData")]
 public class EnemyData : CharacterDataBase
@@ -17,12 +34,30 @@ public class EnemyData : CharacterDataBase
 
     [Header("敌人行为")]
     [SerializeField] private bool canEscape = false;
+
+    [Obsolete("使用 commonRewards / extraRewards 与战斗结算中继")]
     public int expReward;
+
+    [Obsolete("使用 commonRewards / extraRewards 与战斗结算中继")]
     public int moneyReward;
 
-    // 战斗结果额外效果（可扩展）
+    [Header("战斗结算奖励")]
+    [Tooltip("胜利时发放：物品或金钱条目；可为空。")]
+    [SerializeField] private List<BattleRewardEntry> commonRewards = new List<BattleRewardEntry>();
+
+    [Tooltip("胜利时发放：与常见奖励结构相同，用于「额外一次胜利奖励」等扩展；可为空。")]
+    [SerializeField] private List<BattleRewardEntry> extraRewards = new List<BattleRewardEntry>();
+
+    [Tooltip("胜利叙述补充句，如【你从女贼身上抢了0.4元】；可为空。")]
+    [SerializeField] private string extraVictoryDescription;
+
+    [Obsolete("使用常见/额外奖励配置与结算中继")]
     public List<BattleResultEffect> onWinEffects;
+
+    [Obsolete("使用常见/额外奖励配置与结算中继")]
     public List<BattleResultEffect> onLoseEffects;
+
+    [Obsolete("使用常见/额外奖励配置与结算中继")]
     public List<BattleResultEffect> onEscapeEffects;
 
     public string EnemyId => enemyId;
@@ -31,9 +66,18 @@ public class EnemyData : CharacterDataBase
     public string BattleOpeningTaunt => battleOpeningTaunt ?? string.Empty;
 
     public IReadOnlyList<EnemyBattleTraitAsset> BattleTraits => battleTraits;
+
+    public IReadOnlyList<BattleRewardEntry> CommonRewards =>
+        commonRewards != null ? commonRewards : Array.Empty<BattleRewardEntry>();
+
+    public IReadOnlyList<BattleRewardEntry> ExtraRewards =>
+        extraRewards != null ? extraRewards : Array.Empty<BattleRewardEntry>();
+
+    public string ExtraVictoryDescription => extraVictoryDescription ?? string.Empty;
 }
 
 [System.Serializable]
+[Obsolete("使用常见/额外奖励配置与结算中继")]
 public class BattleResultEffect
 {
     public ResultType type;      // 复用事件系统的结果类型
