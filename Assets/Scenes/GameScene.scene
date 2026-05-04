@@ -10633,6 +10633,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 666cdfacec0d1a84c82c0f320e534bdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  baseVictoryAttackDelta: 1
+  baseVictoryDefenseDelta: 1
+  baseVictoryMaxHpDelta: 5
 --- !u!114 &1256681879
 MonoBehaviour:
   m_ObjectHideFlags: 0

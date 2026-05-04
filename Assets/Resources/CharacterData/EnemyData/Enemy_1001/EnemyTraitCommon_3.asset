@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3974df29962557429c8782ee1106833, type: 3}
   m_Name: EnemyTraitCommon_3
   m_EditorClassIdentifier: 
-  traitDisplayName: "\u560E\u811A\u4F1E"
+  traitDisplayName: "\u5B89\u8FEA"
   trigger: 0
   onlyWhenEnemyLostHpFromPlayerHit: 0
   onlyWhenPlayerLostHpFromEnemyHit: 0
   effectLines:
-  - kind: 20
-    intValue: 200
+  - kind: 2
+    intValue: -200
     floatValue: 0
     customNarrationFragment: 
   flavorClause: 

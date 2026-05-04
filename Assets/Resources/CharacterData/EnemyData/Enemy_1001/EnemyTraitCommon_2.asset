@@ -17,7 +17,7 @@ MonoBehaviour:
   onlyWhenEnemyLostHpFromPlayerHit: 0
   onlyWhenPlayerLostHpFromEnemyHit: 0
   effectLines:
-  - kind: 20
+  - kind: 1
     intValue: 200
     floatValue: 0
     customNarrationFragment: 

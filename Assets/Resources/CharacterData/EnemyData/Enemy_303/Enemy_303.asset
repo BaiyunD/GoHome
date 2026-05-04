@@ -26,8 +26,3 @@ MonoBehaviour:
   level: 8
   battleTraits: []
   canEscape: 0
-  expReward: 1
-  moneyReward: 1
-  onWinEffects: []
-  onLoseEffects: []
-  onEscapeEffects: []

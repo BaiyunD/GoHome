@@ -27,8 +27,3 @@ MonoBehaviour:
   battleTraits:
   - {fileID: 11400000, guid: 07df157db15704e44811e64f29a256fe, type: 2}
   canEscape: 0
-  expReward: 1
-  moneyReward: 1
-  onWinEffects: []
-  onLoseEffects: []
-  onEscapeEffects: []

@@ -28,8 +28,3 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5b852db23c3b24f499bc6f748b4859d7, type: 2}
   battleOpeningTaunt: 
   canEscape: 1
-  expReward: 1
-  moneyReward: 1
-  onWinEffects: []
-  onLoseEffects: []
-  onEscapeEffects: []

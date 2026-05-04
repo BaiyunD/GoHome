@@ -35,12 +35,6 @@ public class EnemyData : CharacterDataBase
     [Header("敌人行为")]
     [SerializeField] private bool canEscape = false;
 
-    [Obsolete("使用 commonRewards / extraRewards 与战斗结算中继")]
-    public int expReward;
-
-    [Obsolete("使用 commonRewards / extraRewards 与战斗结算中继")]
-    public int moneyReward;
-
     [Header("战斗结算奖励")]
     [Tooltip("胜利时发放：物品或金钱条目；可为空。")]
     [SerializeField] private List<BattleRewardEntry> commonRewards = new List<BattleRewardEntry>();
@@ -50,15 +44,6 @@ public class EnemyData : CharacterDataBase
 
     [Tooltip("胜利叙述补充句，如【你从女贼身上抢了0.4元】；可为空。")]
     [SerializeField] private string extraVictoryDescription;
-
-    [Obsolete("使用常见/额外奖励配置与结算中继")]
-    public List<BattleResultEffect> onWinEffects;
-
-    [Obsolete("使用常见/额外奖励配置与结算中继")]
-    public List<BattleResultEffect> onLoseEffects;
-
-    [Obsolete("使用常见/额外奖励配置与结算中继")]
-    public List<BattleResultEffect> onEscapeEffects;
 
     public string EnemyId => enemyId;
     public int Level => level;
@@ -74,13 +59,4 @@ public class EnemyData : CharacterDataBase
         extraRewards != null ? extraRewards : Array.Empty<BattleRewardEntry>();
 
     public string ExtraVictoryDescription => extraVictoryDescription ?? string.Empty;
-}
-
-[System.Serializable]
-[Obsolete("使用常见/额外奖励配置与结算中继")]
-public class BattleResultEffect
-{
-    public ResultType type;      // 复用事件系统的结果类型
-    public ResultOperation operation;
-    public float value;
 }
