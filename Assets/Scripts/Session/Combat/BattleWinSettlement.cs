@@ -62,16 +62,17 @@ public static class BattleWinSettlement
         List<string> commonParts = new List<string>();
         ApplyEntries(rewards != null ? rewards.Common : null, commonParts);
 
-        List<string> extraParts = new List<string>();
-        ApplyEntries(rewards != null ? rewards.Extra : null, extraParts);
+        // extraRewards：仅发放，不写入 EventNarrationModal 的「获得…」与 common 同列展示
+        ApplyEntries(rewards != null ? rewards.Extra : null, null);
 
         string desc = rewards != null ? rewards.ExtraVictoryDescription : string.Empty;
-        return BattleWinNarrationComposer.Compose(baseClause, commonParts, extraParts, desc);
+        return BattleWinNarrationComposer.Compose(baseClause, commonParts, null, desc);
     }
 
+    /// <param name="acquireParts">为 null 时只发放物品/金钱，不生成叙述片段。</param>
     private static void ApplyEntries(IReadOnlyList<BattleRewardEntry> entries, List<string> acquireParts)
     {
-        if (entries == null || acquireParts == null)
+        if (entries == null)
         {
             return;
         }
@@ -98,8 +99,11 @@ public static class BattleWinSettlement
                     InventoryManager.Instance.AddItem(id, count);
                 }
 
-                string display = BattleWinNarrationComposer.TryResolveItemDisplayName(id);
-                acquireParts.Add(BattleWinNarrationComposer.FormatItemAcquirePart(display, count));
+                if (acquireParts != null)
+                {
+                    string display = BattleWinNarrationComposer.TryResolveItemDisplayName(id);
+                    acquireParts.Add(BattleWinNarrationComposer.FormatItemAcquirePart(display, count));
+                }
             }
             else if (entry.kind == BattleRewardEntry.RewardKind.Money)
             {
@@ -116,7 +120,10 @@ public static class BattleWinSettlement
                     p.MoneyCents = MoneyUtil.ClampNonNegativeCents(p.MoneyCents + cents);
                 }
 
-                acquireParts.Add(BattleWinNarrationComposer.FormatMoneyAcquirePart(yuan));
+                if (acquireParts != null)
+                {
+                    acquireParts.Add(BattleWinNarrationComposer.FormatMoneyAcquirePart(yuan));
+                }
             }
         }
     }
