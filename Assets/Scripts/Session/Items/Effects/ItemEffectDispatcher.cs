@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 public sealed class AdvanceSupplyEffectDispatchResult
@@ -329,6 +330,74 @@ public static class ItemEffectDispatcher
                 effectDefinition.OnBattleHookItemEffect(context, level);
             }
         }
+    }
+
+    /// <summary>战斗胜利主结算之后：按物品 Id 升序遍历背包，拼接各效果返回的追加叙述。</summary>
+    public static string AppendBattleVictorySettlement(BattleVictorySettlementContext ctx)
+    {
+        if (ctx == null || InventoryManager.Instance == null)
+        {
+            return string.Empty;
+        }
+
+        List<int> itemIds = new List<int>();
+        foreach (KeyValuePair<int, int> pair in InventoryManager.inventoryDict)
+        {
+            if (pair.Value > 0)
+            {
+                itemIds.Add(pair.Key);
+            }
+        }
+
+        itemIds.Sort();
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < itemIds.Count; i++)
+        {
+            int itemId = itemIds[i];
+            int level = Mathf.Max(0, InventoryManager.Instance.GetItemCount(itemId));
+            if (level <= 0)
+            {
+                continue;
+            }
+
+            if (!TryGetOrderedGroups(itemId, out List<ItemEffectDefinition> commonEffects, out List<ItemEffectDefinition> specificEffects, out _))
+            {
+                continue;
+            }
+
+            for (int c = 0; c < commonEffects.Count; c++)
+            {
+                ItemEffectDefinition effectDefinition = commonEffects[c];
+                if (effectDefinition == null)
+                {
+                    continue;
+                }
+
+                string fragment = effectDefinition.OnBattleVictorySettlement(ctx, level);
+                if (!string.IsNullOrEmpty(fragment))
+                {
+                    sb.Append(fragment);
+                }
+            }
+
+            for (int s = 0; s < specificEffects.Count; s++)
+            {
+                ItemEffectDefinition effectDefinition = specificEffects[s];
+                if (effectDefinition == null)
+                {
+                    continue;
+                }
+
+                string fragment = effectDefinition.OnBattleVictorySettlement(ctx, level);
+                if (!string.IsNullOrEmpty(fragment))
+                {
+                    sb.Append(fragment);
+                }
+            }
+        }
+
+        return sb.ToString();
     }
 
     private static string ResolveItemDisplayName(int itemId)

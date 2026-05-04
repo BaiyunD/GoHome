@@ -233,6 +233,27 @@ public class BattleManager : MonoBehaviour
             BaseVictoryDefenseDelta,
             BaseVictoryMaxHpDelta);
 
+        if (result == BattleResult.Win && rewardSnapshot != null)
+        {
+            BattleVictorySettlementContext victoryCtx = new BattleVictorySettlementContext(
+                rewardSnapshot,
+                BaseVictoryAttackDelta,
+                BaseVictoryDefenseDelta,
+                BaseVictoryMaxHpDelta);
+            string victorySuffix = ItemEffectDispatcher.AppendBattleVictorySettlement(victoryCtx);
+            if (!string.IsNullOrEmpty(victorySuffix))
+            {
+                narration += victorySuffix;
+            }
+
+            string extraVictoryTail = BattleWinNarrationComposer.FormatExtraVictoryDescriptionSuffix(
+                rewardSnapshot.ExtraVictoryDescription);
+            if (!string.IsNullOrEmpty(extraVictoryTail))
+            {
+                narration += extraVictoryTail;
+            }
+        }
+
         UIManager.Instance?.UpdateInfo();
 
         // 结算发奖后再通知流程侧，避免回调内读档/重置先把 PlayerRuntime 洗掉。

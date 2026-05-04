@@ -15,7 +15,8 @@ MonoBehaviour:
   id: 209
   kind: 2
   displayName: "\u5E78\u8FD0\u77F3"
-  description: "[2%*LV]\u51E0\u7387\u6218\u6597\u65F6\u989D\u5916\u83B7\u5F97\u4E00\u6B21\u7269\u8D44"
+  description: "\u6BCF\u7EA72%\u6982\u7387\uFF08\u603B\u6982\u7387=min(100%\uFF0C2%\u00D7\u6301\u6709\u6570\uFF09\uFF1A\u6218\u6597\u80DC\u5229\u65F6\u518D\u7ED3\u7B97\u4E00\u6B21\u57FA\u7840\u4E09\u9009\u4E00\u4E0E\u5E38\u89C1\u5956\u52B1\uFF0C\u4E0D\u91CD\u590D\u989D\u5916\u5956\u52B1\u3002"
   icon: {fileID: 0}
   commonEffectDefinitions: []
-  specificEffectDefinitions: []
+  specificEffectDefinitions:
+  - {fileID: 11400000, guid: b9a8c7d6e5f403928171615141312110, type: 2}

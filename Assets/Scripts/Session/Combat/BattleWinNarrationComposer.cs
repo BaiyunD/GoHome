@@ -54,22 +54,26 @@ public static class BattleWinNarrationComposer
             sb.Append("。");
         }
 
-        if (!string.IsNullOrWhiteSpace(extraVictoryDescription))
-        {
-            string extra = extraVictoryDescription.Trim();
-            if (extra.Length >= 2 && extra[0] == '【' && extra[extra.Length - 1] == '】')
-            {
-                sb.Append(extra);
-            }
-            else
-            {
-                sb.Append('【');
-                sb.Append(extra);
-                sb.Append('】');
-            }
-        }
+        sb.Append(FormatExtraVictoryDescriptionSuffix(extraVictoryDescription));
 
         return sb.ToString();
+    }
+
+    /// <summary>敌人「胜利补充句」：已带【】则原样返回，否则外包一层【】；空则返回空串。</summary>
+    public static string FormatExtraVictoryDescriptionSuffix(string extraVictoryDescription)
+    {
+        if (string.IsNullOrWhiteSpace(extraVictoryDescription))
+        {
+            return string.Empty;
+        }
+
+        string extra = extraVictoryDescription.Trim();
+        if (extra.Length >= 2 && extra[0] == '【' && extra[extra.Length - 1] == '】')
+        {
+            return extra;
+        }
+
+        return $"【{extra}】";
     }
 
     public static string FormatMoneyAcquirePart(float yuan)
