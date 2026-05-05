@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 public enum BattleEffectOwner
 {
     Player = 0,
@@ -26,4 +28,69 @@ public sealed class BattleEffectContext
     public float FleeRate;
     public int TurnIndex;
     public BattleResult EndResult;
+
+    private readonly List<string> _attackerPhaseLogParts = new List<string>(2);
+    private readonly List<string> _defenderPhaseLogParts = new List<string>(2);
+    private readonly List<string> _afterAttackPhaseLogParts = new List<string>(2);
+    private readonly List<string> _defenderAfterReceivePhaseLogParts = new List<string>(2);
+
+    public void AppendAttackerPhaseLog(string fragment)
+    {
+        if (string.IsNullOrEmpty(fragment))
+        {
+            return;
+        }
+
+        _attackerPhaseLogParts.Add(fragment);
+    }
+
+    public void AppendDefenderPhaseLog(string fragment)
+    {
+        if (string.IsNullOrEmpty(fragment))
+        {
+            return;
+        }
+
+        _defenderPhaseLogParts.Add(fragment);
+    }
+
+    public string BuildAttackerPhaseLogSuffix()
+    {
+        return _attackerPhaseLogParts.Count == 0 ? string.Empty : string.Concat(_attackerPhaseLogParts);
+    }
+
+    public string BuildDefenderPhaseLogSuffix()
+    {
+        return _defenderPhaseLogParts.Count == 0 ? string.Empty : string.Concat(_defenderPhaseLogParts);
+    }
+
+    public void AppendAfterAttackPhaseLog(string fragment)
+    {
+        if (string.IsNullOrEmpty(fragment))
+        {
+            return;
+        }
+
+        _afterAttackPhaseLogParts.Add(fragment);
+    }
+
+    public string BuildAfterAttackPhaseLogSuffix()
+    {
+        return _afterAttackPhaseLogParts.Count == 0 ? string.Empty : string.Concat(_afterAttackPhaseLogParts);
+    }
+
+    public void AppendDefenderAfterReceivePhaseLog(string fragment)
+    {
+        if (string.IsNullOrEmpty(fragment))
+        {
+            return;
+        }
+
+        _defenderAfterReceivePhaseLogParts.Add(fragment);
+    }
+
+    public string BuildDefenderAfterReceivePhaseLogSuffix()
+    {
+        return _defenderAfterReceivePhaseLogParts.Count == 0 ? string.Empty : string.Concat(_defenderAfterReceivePhaseLogParts);
+    }
 }

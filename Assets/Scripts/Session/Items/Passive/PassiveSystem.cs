@@ -10,6 +10,7 @@ public class PassiveSystem : MonoBehaviour
         {
             InventoryManager.Instance.OnItemChanged += Rebuild;
         }
+
         if (CraftManager.Instance != null)
         {
             CraftManager.Instance.OnCrafted += Rebuild;
@@ -22,10 +23,45 @@ public class PassiveSystem : MonoBehaviour
         {
             InventoryManager.Instance.OnItemChanged -= Rebuild;
         }
+
         if (CraftManager.Instance != null)
         {
             CraftManager.Instance.OnCrafted -= Rebuild;
         }
+    }
+
+    /// <summary>
+    /// 根据当前背包聚合道具被动（不写入 PlayerRuntime）。
+    /// </summary>
+    public static PassiveAccumulator ComputePassiveAccumulatorFromInventory()
+    {
+        PassiveAccumulator acc = new PassiveAccumulator();
+        if (InventoryManager.Instance == null || ItemRegistry.Instance == null)
+        {
+            return acc;
+        }
+
+        foreach (System.Collections.Generic.KeyValuePair<int, int> pair in InventoryManager.inventoryDict)
+        {
+            if (pair.Value <= 0)
+            {
+                continue;
+            }
+
+            if (!ItemRegistry.Instance.TryGet(pair.Key, out ItemBase item) || item == null)
+            {
+                continue;
+            }
+
+            if (item.Kind != ItemKind.Tool)
+            {
+                continue;
+            }
+
+            ItemEffectDispatcher.OnPassiveItemEffect(pair.Key, pair.Value, acc, out _);
+        }
+
+        return acc;
     }
 
     public void Rebuild()
@@ -35,67 +71,56 @@ public class PassiveSystem : MonoBehaviour
             return;
         }
 
-        if (ItemRegistry.Instance == null)
-        {
-            return;
-        }
-
         PassiveAccumulator acc = new PassiveAccumulator();
-
-        foreach (var pair in InventoryManager.inventoryDict)
+        if (InventoryManager.Instance != null && ItemRegistry.Instance != null)
         {
-            if (pair.Value <= 0) continue;
-            if (!ItemRegistry.Instance.TryGet(pair.Key, out ItemBase item) || item == null) continue;
-            if (item.Kind != ItemKind.Tool) continue;
-
-            bool applied = ItemEffectDispatcher.OnPassiveItemEffect(pair.Key, pair.Value, acc, out ItemEffectSource source);
-            if (!applied)
+            foreach (System.Collections.Generic.KeyValuePair<int, int> pair in InventoryManager.inventoryDict)
             {
-                continue;
-            }
+                if (pair.Value <= 0)
+                {
+                    continue;
+                }
 
-            Debug.Log($"PassiveSystem.Rebuild -> item={pair.Key}, source={source}, level={pair.Value}");
+                if (!ItemRegistry.Instance.TryGet(pair.Key, out ItemBase item) || item == null)
+                {
+                    continue;
+                }
+
+                if (item.Kind != ItemKind.Tool)
+                {
+                    continue;
+                }
+
+                bool applied = ItemEffectDispatcher.OnPassiveItemEffect(pair.Key, pair.Value, acc, out ItemEffectSource source);
+                if (!applied)
+                {
+                    continue;
+                }
+
+                Debug.Log($"PassiveSystem.Rebuild -> item={pair.Key}, source={source}, level={pair.Value}");
+            }
         }
 
-        ApplyToPlayer(
-            PlayerStateManager.Instance.Current,
-            PlayerStateManager.Instance.CurrentStartGameConfig,
-            acc
-        );
+        ApplyPassiveLayerOnly(PlayerStateManager.Instance.Current, acc);
     }
 
-    private void ApplyToPlayer(PlayerRuntime runtime, StartGameConfig startGameConfig, PassiveAccumulator acc)
+    /// <summary>只更新道具被动层并重算最终扁平字段；不改 CombatBase。</summary>
+    private void ApplyPassiveLayerOnly(PlayerRuntime runtime, PassiveAccumulator acc)
     {
         if (runtime == null || acc == null)
         {
             return;
         }
-        PlayerData template = runtime.RuntimeData;
 
-        float baseHpMax = template != null ? template.HP : 100f;
-        runtime.MaxHp = baseHpMax + acc.HpMaxBonus;
-        runtime.CurrentHp = Mathf.Clamp(runtime.CurrentHp, 0f, Mathf.Max(0f, runtime.MaxHp));
-
-        float baseAttack = template != null ? template.Attack : 0f;
-        float baseDefense = template != null ? template.Defense : 0f;
-        float baseCriticalRate = template != null ? template.CriticalRate : 0f;
-        float baseCriticalDamage = template != null ? template.CriticalDamage : 150f;
-        float baseBlockRate = template != null ? template.BlockRate : 0f;
-        float baseDodgeRate = template != null ? template.DodgeRate : 0f;
-
-        runtime.Attack = baseAttack + acc.AttackBonus;
-        runtime.Defense = baseDefense + acc.DefenseBonus;
-        runtime.CriticalRate = baseCriticalRate + acc.CriticalRateBonus;
-        runtime.CriticalDamage = baseCriticalDamage;
-        runtime.BlockRate = baseBlockRate + acc.BlockRateBonus;
-        runtime.DodgeRate = baseDodgeRate + acc.DodgeRateBonus;
+        runtime.CombatItemPassive = PlayerCombatStatItemPassive.FromAccumulator(acc);
+        runtime.RefreshFlattenedCombatFromLayers();
 
         ApplyEnergyMaxBonus(acc.EnergyMaxBonus);
 
         if (acc.HungerMaxBonus != 0f)
         {
             Debug.LogWarning(
-                "PassiveSystem.ApplyToPlayer -> Hunger 被动加成暂未接入资源系统，已跳过。"
+                "PassiveSystem.ApplyPassiveLayerOnly -> Hunger 被动加成暂未接入资源系统，已跳过。"
             );
         }
     }
@@ -127,4 +152,3 @@ public class PassiveSystem : MonoBehaviour
         );
     }
 }
-

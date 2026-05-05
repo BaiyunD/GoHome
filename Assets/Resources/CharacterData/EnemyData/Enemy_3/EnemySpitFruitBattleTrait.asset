@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a81995c780904204adb48190fa25bd57, type: 3}
+  m_Name: EnemySpitFruitBattleTrait
+  m_EditorClassIdentifier: 
+  traitDisplayName: "\u5410\u679C\u5B50"
+  trigger: 1
+  onlyWhenEnemyLostHpFromPlayerHit: 0
+  onlyWhenPlayerLostHpFromEnemyHit: 0
+  itemId: 105
+  grantCount: 1
+  narrationFlavor: "\u5C0F\u5154\u5B50\u5411\u4F60\u5410\u4E86\u4E00\u4E2A\u679C\u5B50"

@@ -14,7 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectId: 218
   effectDescription: 
+  displayPriority: 100
   hpMaxPerLevel: 0
   energyMaxPerLevel: 0
   attackPerLevel: 0
-  defensePerLevel: 5
+  defensePerLevel: 10
+  criticalRatePerLevel: 0
+  criticalDamagePerLevel: 0
+  blockRatePerLevel: 0
+  dodgeRatePerLevel: 0
+  escapeRatePerLevel: 0

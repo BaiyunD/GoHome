@@ -197,20 +197,30 @@ public class TraitManager : MonoBehaviour
     public void ReplacePlayerTraits(IEnumerable<string> traitIds)
     {
         ClearOwnerTraits(TraitOwner.Player);
-        if (traitIds == null)
+        if (traitIds != null)
+        {
+            foreach (string traitId in traitIds)
+            {
+                if (string.IsNullOrEmpty(traitId))
+                {
+                    continue;
+                }
+
+                AddTrait(traitId, TraitOwner.Player);
+            }
+        }
+
+        PushPlayerTraitsToRuntime();
+    }
+
+    private void PushPlayerTraitsToRuntime()
+    {
+        if (PlayerStateManager.Instance == null || PlayerStateManager.Instance.Current == null)
         {
             return;
         }
 
-        foreach (string traitId in traitIds)
-        {
-            if (string.IsNullOrEmpty(traitId))
-            {
-                continue;
-            }
-
-            AddTrait(traitId, TraitOwner.Player);
-        }
+        PlayerStateManager.Instance.Current.TraitIds = ExportPlayerTraitIds();
     }
 
     private List<string> GetTraitIdList(TraitOwner owner)

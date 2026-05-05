@@ -190,7 +190,7 @@ public sealed class SessionRoot : MonoBehaviour
             return false;
         }
 
-        bool applied = PlayerStateManager.ApplySaveSnapshot(saveData.Player, out errorMessage);
+        bool applied = PlayerStateManager.ApplySaveSnapshot(saveData.Player, saveData.Version, out errorMessage);
         if (!applied)
         {
             return false;
@@ -310,6 +310,8 @@ public sealed class SessionRoot : MonoBehaviour
         {
             ShopService.Instance.InitializeForNewGame();
         }
+
+        TriggerPassiveRebuildAfterInventoryReady();
     }
 
     private void ApplyContinueRuntimeState()
@@ -333,6 +335,20 @@ public sealed class SessionRoot : MonoBehaviour
             ? _pendingRuntimeSaveData.Inventory.Entries
             : Array.Empty<SaveInventoryEntryData>();
         InventoryManager.Instance.ReplaceAllItems(inventoryEntries, false);
+
+        if (_pendingRuntimeSaveData != null &&
+            _pendingRuntimeSaveData.Version < PlayerCombatStatCalculator.SaveFormatCombatLayers &&
+            PlayerStateManager.Instance != null &&
+            PlayerStateManager.Instance.Current != null)
+        {
+            PlayerRuntime rt = PlayerStateManager.Instance.Current;
+            PassiveAccumulator acc = PassiveSystem.ComputePassiveAccumulatorFromInventory();
+            rt.CombatItemPassive = PlayerCombatStatItemPassive.FromAccumulator(acc);
+            rt.MigrateCombatBaseFromLegacyCombinedSnapshot(_pendingRuntimeSaveData.Player);
+            rt.RefreshFlattenedCombatFromLayers();
+            rt.CurrentHp = Mathf.Clamp(rt.CurrentHp, 0f, rt.MaxHp);
+        }
+
         TriggerPassiveRebuildAfterInventoryReady();
 
         string[] playerTraitIds = _pendingRuntimeSaveData != null && _pendingRuntimeSaveData.Traits != null

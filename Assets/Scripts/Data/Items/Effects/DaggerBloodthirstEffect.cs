@@ -43,6 +43,7 @@ public sealed class DaggerBloodthirstEffect : ItemEffectDefinition
         }
 
         context.Attacker.Heal(healAmount);
+        context.AppendAfterAttackPhaseLog($"【嗜血】恢复{healAmount}点生命值");
     }
 
 }

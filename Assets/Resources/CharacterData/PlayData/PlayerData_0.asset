@@ -16,7 +16,7 @@ MonoBehaviour:
   hp: 200
   attack: 40
   defense: 20
-  criticalRate: 0
+  criticalRate: 80
   criticalDamage: 150
   dodgeRate: 0
   blockRate: 0

@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public sealed class NormalAttackAction : IPlayerAction
 {
     public CombatActionResult Execute(PlayerActionContext context)
@@ -10,10 +8,38 @@ public sealed class NormalAttackAction : IPlayerAction
             return result;
         }
 
-        int damage = Mathf.Max(0, context.Player.Attack - context.Enemy.Defense);
+        NormalAttackResolution resolution = NormalAttackResolver.Resolve(
+            context.Player,
+            context.Enemy,
+            context.DamageBoostMultiplier,
+            context.DamageReductionMultiplier
+        );
+        int damage = resolution.Damage;
+        BattleItemHookRunner.RunPlayerBeforeAttack(
+            context.Player,
+            context.Enemy,
+            ref damage,
+            out string attackerPhaseLog,
+            out string defenderPhaseLog);
+        BattleItemHookRunner.RunPlayerAfterAttack(
+            context.Player,
+            context.Enemy,
+            damage,
+            out string afterAttackPhaseLog);
         result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamageEnemy, damage));
         result.SettlementLogs.Add(
-            CombatSettlementLog.FromAttack(new BattleAttackEvent("你", context.EnemyName, "普攻", damage))
+            CombatSettlementLog.FromAttack(new BattleAttackEvent(
+                "你",
+                context.EnemyName,
+                "普攻",
+                damage,
+                resolution.IsCritical,
+                resolution.IsBlocked,
+                resolution.IsDodged,
+                attackerPhaseLog,
+                defenderPhaseLog,
+                afterAttackPhaseLog
+            ))
         );
         return result;
     }

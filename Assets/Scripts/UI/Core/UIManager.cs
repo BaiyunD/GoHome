@@ -137,7 +137,7 @@ public class UIManager : MonoBehaviour
         {
             hudStatusPanel.RefreshStatus();
         }
-        if (combatStatsPanel != null && combatStatsPanel.gameObject.activeInHierarchy)
+        if (combatStatsPanel != null)
         {
             combatStatsPanel.RefreshCombatStats();
         }

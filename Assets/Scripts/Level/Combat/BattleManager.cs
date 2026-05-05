@@ -18,6 +18,23 @@ public class BattleManager : MonoBehaviour
     private bool _controlsInteractable = true;
     private BattlePhase _phase = BattlePhase.None;
     private BattleTurnSubPhase _turnSubPhase = BattleTurnSubPhase.None;
+    private int _playerRuptureStackCount;
+    private int _foxSpiritDefenseStacks;
+    private int _playerBattleStartDefense;
+    private int _playerPoisonStacks;
+    private int _playerPoisonBaseMax;
+    private bool _battleOpeningNarrationDismissPending;
+    private EnemyKind _battleEnemyKind;
+
+    [Header("胜利基础奖励")]
+    [Tooltip("战斗胜利时随机三选一：攻击永久加成（点）。")]
+    [SerializeField] private int baseVictoryAttackDelta = 1;
+
+    [Tooltip("战斗胜利时随机三选一：防御永久加成（点）。")]
+    [SerializeField] private int baseVictoryDefenseDelta = 1;
+
+    [Tooltip("战斗胜利时随机三选一：最大生命永久加成（点）。")]
+    [SerializeField] private int baseVictoryMaxHpDelta = 5;
 
     public CharacterRuntimeStats PlayerRuntime => _playerSnapshot;
     public CharacterRuntimeStats EnemyRuntime => _enemySnapshot;
@@ -26,6 +43,12 @@ public class BattleManager : MonoBehaviour
     public BattleTurnSubPhase TurnSubPhase => _turnSubPhase;
     public bool ControlsVisible => _controlsVisible;
     public bool ControlsInteractable => _controlsInteractable;
+
+    public int BaseVictoryAttackDelta => Mathf.Max(0, baseVictoryAttackDelta);
+
+    public int BaseVictoryDefenseDelta => Mathf.Max(0, baseVictoryDefenseDelta);
+
+    public int BaseVictoryMaxHpDelta => Mathf.Max(0, baseVictoryMaxHpDelta);
 
     public event Action<BattleAttackEvent> PlayerAttackResolved;
     public event Action<BattleAttackEvent> EnemyAttackResolved;
@@ -78,10 +101,12 @@ public class BattleManager : MonoBehaviour
 
         _isEnding = false;
         _pendingEndResult = null;
+        _battleOpeningNarrationDismissPending = false;
         ClearPendingSettlementLogs();
         _onBattleEnd = onEnd;
         SetPhase(BattlePhase.Preparing);
         SetSubPhase(BattleTurnSubPhase.None, "BattleStart-Preparing");
+        _battleEnemyKind = EnemyKind.Minion;
 
         if (EnemyStateManager.Instance == null)
         {
@@ -119,6 +144,11 @@ public class BattleManager : MonoBehaviour
             PlayerStateManager.Instance.Current.EscapeRate
         );
         _enemySnapshot = new CharacterRuntimeStats(enemyRuntime);
+        _battleEnemyKind = enemyRuntime.RuntimeData != null
+            ? enemyRuntime.RuntimeData.Kind
+            : EnemyKind.Minion;
+        ResetBattleCombatExtras();
+        _playerBattleStartDefense = _playerSnapshot != null ? _playerSnapshot.Defense : 0;
 
         SetSubPhase(BattleTurnSubPhase.WaitPlayerInput, "BattleStart-WaitPlayerInput");
         InjectTraits();
@@ -135,6 +165,7 @@ public class BattleManager : MonoBehaviour
         UIManager.Instance.CloseUIEntry(UIKey.ActionBar);
         UIManager.Instance.OpenUIEntry(UIKey.Battle);
         UIManager.Instance.SetCombatStatsOpen(true);
+        ApplyBattleOpeningNarrationFromCurrentEnemy();
     }
 
     public void EndBattle(BattleResult result)
@@ -177,16 +208,67 @@ public class BattleManager : MonoBehaviour
             TraitManager.Instance.ClearOwnerTraits(TraitOwner.Enemy);
         }
 
-        _onBattleEnd?.Invoke(result);
-        _onBattleEnd = null;
+        string enemyEscapeNarrationName = null;
+        if (result == BattleResult.EnemyEscape)
+        {
+            string name = GetEnemyBaseName();
+            enemyEscapeNarrationName = string.IsNullOrWhiteSpace(name) ? null : name;
+        }
+
+        BattleSettlementRewardSnapshot rewardSnapshot = BattleSettlementRewardSnapshot.FromEnemyData(
+            EnemyStateManager.Instance != null && EnemyStateManager.Instance.Current != null
+                ? EnemyStateManager.Instance.Current.RuntimeData
+                : null);
+
         _playerSnapshot = null;
         _enemySnapshot = null;
+        ResetBattleCombatExtras();
         if (EnemyStateManager.Instance != null)
         {
             EnemyStateManager.Instance.ClearCurrent();
         }
 
-        string narration = BuildBattleEndNarration(result);
+        BattleSettlementContext settlementContext = new BattleSettlementContext(
+            result,
+            enemyEscapeNarrationName,
+            rewardSnapshot);
+        int victoryTierMult = VictoryTierMultiplier(_battleEnemyKind);
+        int victoryAtk = Mathf.Max(0, BaseVictoryAttackDelta * victoryTierMult);
+        int victoryDef = Mathf.Max(0, BaseVictoryDefenseDelta * victoryTierMult);
+        int victoryHp = Mathf.Max(0, BaseVictoryMaxHpDelta * victoryTierMult);
+        string narration = BattleSettlementRelay.Dispatch(
+            settlementContext,
+            victoryAtk,
+            victoryDef,
+            victoryHp);
+
+        if (result == BattleResult.Win && rewardSnapshot != null)
+        {
+            BattleVictorySettlementContext victoryCtx = new BattleVictorySettlementContext(
+                rewardSnapshot,
+                victoryAtk,
+                victoryDef,
+                victoryHp);
+            string victorySuffix = ItemEffectDispatcher.AppendBattleVictorySettlement(victoryCtx);
+            if (!string.IsNullOrEmpty(victorySuffix))
+            {
+                narration += victorySuffix;
+            }
+
+            string extraVictoryTail = BattleWinNarrationComposer.FormatExtraVictoryDescriptionSuffix(
+                rewardSnapshot.ExtraVictoryDescription);
+            if (!string.IsNullOrEmpty(extraVictoryTail))
+            {
+                narration += extraVictoryTail;
+            }
+        }
+
+        UIManager.Instance?.UpdateInfo();
+
+        // 结算发奖后再通知流程侧，避免回调内读档/重置先把 PlayerRuntime 洗掉。
+        _onBattleEnd?.Invoke(result);
+        _onBattleEnd = null;
+
         BattleEnded?.Invoke(new BattleEndEvent(result, narration));
         if (UIManager.Instance != null && !string.IsNullOrWhiteSpace(narration))
         {
@@ -194,6 +276,7 @@ public class BattleManager : MonoBehaviour
         }
 
         SetPhase(BattlePhase.None);
+        _battleEnemyKind = EnemyKind.Minion;
         _isEnding = false;
     }
 
@@ -203,6 +286,8 @@ public class BattleManager : MonoBehaviour
         {
             return false;
         }
+
+        DismissBattleOpeningNarrationIfPending();
 
         switch (command.CommandType)
         {
@@ -217,6 +302,46 @@ public class BattleManager : MonoBehaviour
         }
     }
 
+    private void ApplyBattleOpeningNarrationFromCurrentEnemy()
+    {
+        if (UIManager.Instance == null)
+        {
+            return;
+        }
+
+        EnemyRuntime enemyRuntime = EnemyStateManager.Instance != null ? EnemyStateManager.Instance.Current : null;
+        EnemyData data = enemyRuntime != null ? enemyRuntime.RuntimeData : null;
+        string taunt = data != null ? data.BattleOpeningTaunt : string.Empty;
+        if (!string.IsNullOrWhiteSpace(taunt))
+        {
+            UIManager.Instance.ShowEventNarrationModal(taunt);
+        }
+        else
+        {
+            UIManager.Instance.ClearEventNarrationModalText();
+            UIManager.Instance.HideEventNarrationModal();
+        }
+
+        _battleOpeningNarrationDismissPending = true;
+    }
+
+    private void DismissBattleOpeningNarrationIfPending()
+    {
+        if (!_battleOpeningNarrationDismissPending)
+        {
+            return;
+        }
+
+        _battleOpeningNarrationDismissPending = false;
+        if (UIManager.Instance == null)
+        {
+            return;
+        }
+
+        UIManager.Instance.ClearEventNarrationModalText();
+        UIManager.Instance.HideEventNarrationModal();
+    }
+
     public string GetEnemyDisplayName()
     {
         EnemyRuntime enemyRuntime = EnemyStateManager.Instance != null ? EnemyStateManager.Instance.Current : null;
@@ -227,7 +352,8 @@ public class BattleManager : MonoBehaviour
 
         string name = _enemySnapshot != null ? _enemySnapshot.Name : enemyRuntime.DisplayName;
         int level = enemyRuntime != null ? enemyRuntime.Level : 1;
-        return $"{name} LV{level}";
+        EnemyKind kind = ResolveBattleEnemyKind();
+        return FormatEnemyPanelTitle(name, level, kind);
     }
 
     private string GetEnemyBaseName()
@@ -240,6 +366,48 @@ public class BattleManager : MonoBehaviour
 
         string name = _enemySnapshot != null ? _enemySnapshot.Name : enemyRuntime.DisplayName;
         return string.IsNullOrWhiteSpace(name) ? string.Empty : name;
+    }
+
+    private static int VictoryTierMultiplier(EnemyKind kind)
+    {
+        if (kind == EnemyKind.Elite)
+        {
+            return 2;
+        }
+
+        if (kind == EnemyKind.Boss)
+        {
+            return 3;
+        }
+
+        return 1;
+    }
+
+    private EnemyKind ResolveBattleEnemyKind()
+    {
+        EnemyRuntime enemyRuntime = EnemyStateManager.Instance != null ? EnemyStateManager.Instance.Current : null;
+        if (enemyRuntime != null)
+        {
+            return enemyRuntime.Kind;
+        }
+
+        return _battleEnemyKind;
+    }
+
+    private static string FormatEnemyPanelTitle(string baseName, int level, EnemyKind kind)
+    {
+        string name = string.IsNullOrEmpty(baseName) ? string.Empty : baseName;
+        if (kind == EnemyKind.Elite)
+        {
+            return $"{name}（精英） LV{level}";
+        }
+
+        if (kind == EnemyKind.Boss)
+        {
+            return $"{name}（BOSS） LV{level}";
+        }
+
+        return $"{name} LV{level}";
     }
 
     public string GetPlayerHpDisplay()
@@ -340,7 +508,21 @@ public class BattleManager : MonoBehaviour
         SetSubPhase(BattleTurnSubPhase.EnemyAction, "EnemyNormalAttack-Action");
         CombatActionResult actionResult = BuildEnemyActionResult();
         _pendingEnemyActionResult = actionResult;
-        ApplyEnemyActionResultEffects(actionResult);
+        bool enemyEscaped = actionResult != null && actionResult.EndIntent == BattleResult.EnemyEscape;
+        if (!enemyEscaped)
+        {
+            ApplyEnemyActionResultEffects(actionResult);
+            AppendEnemyAttackAfterReceiveToSettlement(actionResult);
+            int damageDealtToPlayer = SumEffectAmount(actionResult, CombatActionEffectType.DamagePlayer);
+            EnemyBattleTraitRunner.RunAndMergeAfterEnemyAttackTraits(
+                actionResult,
+                _playerSnapshot,
+                _enemySnapshot,
+                GetEnemyBaseName(),
+                damageDealtToPlayer);
+            QueueBattleEndByHpIfNeeded();
+        }
+
         ApplyEnemyActionEndIntent(actionResult);
         string settlementReason = actionResult != null && actionResult.EndIntent == BattleResult.EnemyEscape
             ? "EnemyEscape-Settlement"
@@ -367,15 +549,6 @@ public class BattleManager : MonoBehaviour
         return _playerSnapshot != null && _enemySnapshot != null;
     }
 
-    private int CalculateNormalAttackDamage(CharacterRuntimeStats attacker, CharacterRuntimeStats defender)
-    {
-        if (attacker == null || defender == null)
-        {
-            return 0;
-        }
-
-        return Mathf.Max(0, attacker.Attack - defender.Defense);
-    }
 
     private bool QueueBattleEndByHpIfNeeded()
     {
@@ -390,12 +563,19 @@ public class BattleManager : MonoBehaviour
             return new BattleEndEvaluation(false, BattleResult.None, "InvalidRuntimeState");
         }
 
-        if (_enemySnapshot.CurrentHp <= 0)
+        bool playerDead = _playerSnapshot.CurrentHp <= 0;
+        bool enemyDead = _enemySnapshot.CurrentHp <= 0;
+        if (playerDead && enemyDead)
+        {
+            return new BattleEndEvaluation(true, BattleResult.Lose, "BothHpDepletedPlayerLoses");
+        }
+
+        if (enemyDead)
         {
             return new BattleEndEvaluation(true, BattleResult.Win, "EnemyHpDepleted");
         }
 
-        if (_playerSnapshot.CurrentHp <= 0)
+        if (playerDead)
         {
             return new BattleEndEvaluation(true, BattleResult.Lose, "PlayerHpDepleted");
         }
@@ -439,7 +619,13 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        PlayerActionContext context = new PlayerActionContext(_playerSnapshot, _enemySnapshot, GetEnemyBaseName());
+        PlayerActionContext context = new PlayerActionContext(
+            _playerSnapshot,
+            _enemySnapshot,
+            GetEnemyBaseName(),
+            GetPlayerDamageBoostMultiplier(),
+            GetEnemyDamageReductionMultiplier()
+        );
         CombatActionResult result = action.Execute(context);
         _pendingPlayerActionResult = result;
         ApplyPlayerActionResultEffects(result);
@@ -472,6 +658,14 @@ public class BattleManager : MonoBehaviour
             }
         }
 
+        int damageDealtToEnemy = SumEffectAmount(result, CombatActionEffectType.DamageEnemy);
+        EnemyBattleTraitRunner.RunAndMergeReceiveHitTraits(
+            result,
+            _playerSnapshot,
+            _enemySnapshot,
+            GetEnemyBaseName(),
+            damageDealtToEnemy);
+
         QueueBattleEndByHpIfNeeded();
     }
 
@@ -497,20 +691,65 @@ public class BattleManager : MonoBehaviour
         bool canEscape = enemyRuntime != null && enemyRuntime.CanEscape;
         if (canEscape)
         {
-            float escapeRatePercent = enemyRuntime != null ? enemyRuntime.EscapeRatePercent : 0f;
+            float escapeRateClamped = enemyRuntime != null
+                ? CharacterDataBase.ClampRate(enemyRuntime.EscapeRate)
+                : 0f;
             float roll = UnityEngine.Random.Range(0f, 100f);
-            if (roll <= escapeRatePercent)
+            if (roll <= escapeRateClamped)
             {
                 result.EndIntent = BattleResult.EnemyEscape;
                 return result;
             }
         }
 
-        int damage = CalculateNormalAttackDamage(_enemySnapshot, _playerSnapshot);
+        NormalAttackResolution resolution = NormalAttackResolver.Resolve(
+            _enemySnapshot,
+            _playerSnapshot,
+            GetEnemyDamageBoostMultiplier(),
+            GetPlayerDamageReductionMultiplier()
+        );
+        int damage = resolution.Damage;
+        BattleItemHookRunner.RunPlayerBeforeReceiveHit(
+            _enemySnapshot,
+            _playerSnapshot,
+            ref damage,
+            out string enemyAttackerPhaseLog,
+            out string playerDefenderPhaseLog);
         result.Effects.Add(new CombatActionEffect(CombatActionEffectType.DamagePlayer, damage));
         string enemyName = GetEnemyBaseName();
-        result.SettlementLogs.Add(CombatSettlementLog.FromAttack(new BattleAttackEvent(enemyName, "你", "普攻", damage)));
+        result.SettlementLogs.Add(CombatSettlementLog.FromAttack(new BattleAttackEvent(
+            enemyName,
+            "你",
+            "普攻",
+            damage,
+            resolution.IsCritical,
+            resolution.IsBlocked,
+            resolution.IsDodged,
+            enemyAttackerPhaseLog,
+            playerDefenderPhaseLog,
+            null
+        )));
         return result;
+    }
+
+    private static float GetPlayerDamageBoostMultiplier()
+    {
+        return 1f;
+    }
+
+    private static float GetEnemyDamageBoostMultiplier()
+    {
+        return 1f;
+    }
+
+    private static float GetPlayerDamageReductionMultiplier()
+    {
+        return 0f;
+    }
+
+    private static float GetEnemyDamageReductionMultiplier()
+    {
+        return 0f;
     }
 
     private void ApplyEnemyActionResultEffects(CombatActionResult result)
@@ -688,23 +927,6 @@ public class BattleManager : MonoBehaviour
         return _playerSnapshot != null && _enemySnapshot != null;
     }
 
-    private static string BuildBattleEndNarration(BattleResult result)
-    {
-        switch (result)
-        {
-            case BattleResult.Win:
-                return "战斗胜利。";
-            case BattleResult.Lose:
-                return "战斗失败。";
-            case BattleResult.Escape:
-                return "你成功逃离了战斗。";
-            case BattleResult.EnemyEscape:
-                return "敌人逃离了战斗。";
-            default:
-                return string.Empty;
-        }
-    }
-
     private void SyncPlayerHealthBack()
     {
         if (_playerSnapshot == null || PlayerStateManager.Instance == null)
@@ -787,6 +1009,154 @@ public class BattleManager : MonoBehaviour
                 TraitManager.Instance.AddTrait(traitId, TraitOwner.Player);
             }
         }
+    }
+
+    private void ResetBattleCombatExtras()
+    {
+        _playerRuptureStackCount = 0;
+        _foxSpiritDefenseStacks = 0;
+        _playerBattleStartDefense = 0;
+        _playerPoisonStacks = 0;
+        _playerPoisonBaseMax = 0;
+    }
+
+    /// <summary>
+    /// 敌人中毒特性在敌攻结束时调用：单场共用一套层数，基数取 max(x)；层数 +1 后造成 层数×基数 伤害。
+    /// </summary>
+    public bool TryApplyEnemyPoisonStackFromTrait(int basePerLayer, out int damageDealt, out int stacksAfter)
+    {
+        damageDealt = 0;
+        stacksAfter = 0;
+        if (_isEnding || _playerSnapshot == null || basePerLayer <= 0)
+        {
+            return false;
+        }
+
+        _playerPoisonBaseMax = Mathf.Max(_playerPoisonBaseMax, basePerLayer);
+        _playerPoisonStacks++;
+        damageDealt = _playerPoisonStacks * _playerPoisonBaseMax;
+        _playerSnapshot.ApplyDamage(damageDealt);
+        stacksAfter = _playerPoisonStacks;
+
+        UIManager.Instance?.RefreshActiveStatsPanelInHud();
+        QueueBattleEndByHpIfNeeded();
+        return true;
+    }
+
+    public int AdvancePlayerRuptureStackAndGetCapped()
+    {
+        _playerRuptureStackCount = Mathf.Min(_playerRuptureStackCount + 1, 20);
+        return _playerRuptureStackCount;
+    }
+
+    public int PlayerBattleStartDefenseSnapshot => _playerBattleStartDefense;
+
+    public int FoxSpiritDefenseStacks => _foxSpiritDefenseStacks;
+
+    public bool TryIncrementFoxSpiritDefenseStack()
+    {
+        if (_foxSpiritDefenseStacks >= 20)
+        {
+            return false;
+        }
+
+        _foxSpiritDefenseStacks++;
+        return true;
+    }
+
+    private static string MergeDefenderPhaseSuffixes(string before, string after)
+    {
+        if (string.IsNullOrEmpty(after))
+        {
+            return before ?? string.Empty;
+        }
+
+        if (string.IsNullOrEmpty(before))
+        {
+            return after;
+        }
+
+        return before + "。" + after;
+    }
+
+    private void AppendEnemyAttackAfterReceiveToSettlement(CombatActionResult result)
+    {
+        if (result == null || _enemySnapshot == null || _playerSnapshot == null)
+        {
+            return;
+        }
+
+        int damageDealt = 0;
+        for (int i = 0; i < result.Effects.Count; i++)
+        {
+            CombatActionEffect effect = result.Effects[i];
+            if (effect != null && effect.EffectType == CombatActionEffectType.DamagePlayer)
+            {
+                damageDealt += Mathf.Max(0, effect.Amount);
+            }
+        }
+
+        BattleItemHookRunner.RunPlayerAfterReceiveHit(
+            _enemySnapshot,
+            _playerSnapshot,
+            damageDealt,
+            out string afterReceiveSuffix);
+        if (string.IsNullOrEmpty(afterReceiveSuffix))
+        {
+            return;
+        }
+
+        int lastIdx = result.SettlementLogs.Count - 1;
+        if (lastIdx < 0)
+        {
+            return;
+        }
+
+        CombatSettlementLog last = result.SettlementLogs[lastIdx];
+        if (last.LogType != CombatSettlementLogType.Attack || last.AttackEvent == null)
+        {
+            return;
+        }
+
+        BattleAttackEvent old = last.AttackEvent;
+        string mergedDefender = MergeDefenderPhaseSuffixes(old.DefenderPhaseLogSuffix, afterReceiveSuffix);
+        if (mergedDefender == old.DefenderPhaseLogSuffix)
+        {
+            return;
+        }
+
+        result.SettlementLogs.RemoveAt(lastIdx);
+        result.SettlementLogs.Add(CombatSettlementLog.FromAttack(new BattleAttackEvent(
+            old.AttackerName,
+            old.DefenderName,
+            old.SkillLabel,
+            old.Damage,
+            old.IsCritical,
+            old.IsBlocked,
+            old.IsDodged,
+            old.AttackerPhaseLogSuffix,
+            mergedDefender,
+            old.AfterAttackPhaseLogSuffix)));
+    }
+
+    private static int SumEffectAmount(CombatActionResult result, CombatActionEffectType effectType)
+    {
+        if (result == null || result.Effects == null)
+        {
+            return 0;
+        }
+
+        int sum = 0;
+        for (int i = 0; i < result.Effects.Count; i++)
+        {
+            CombatActionEffect effect = result.Effects[i];
+            if (effect != null && effect.EffectType == effectType)
+            {
+                sum += Mathf.Max(0, effect.Amount);
+            }
+        }
+
+        return sum;
     }
 }
 

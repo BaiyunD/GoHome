@@ -23,6 +23,8 @@ public class PassiveAccumulator
     public float CriticalRateBonus;
     public float BlockRateBonus;
     public float DodgeRateBonus;
+    public float CriticalDamageBonus;
+    public float EscapeRateBonus;
 }
 
 public class RestContext
@@ -48,6 +50,18 @@ public class RestContext
     }
 
     public RestSettlement Settlement
+    {
+        get;
+        set;
+    }
+
+    public int CurrentRestItemId
+    {
+        get;
+        set;
+    }
+
+    public string CurrentRestItemDisplayName
     {
         get;
         set;

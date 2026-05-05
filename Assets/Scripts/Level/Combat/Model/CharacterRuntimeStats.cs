@@ -122,9 +122,34 @@ public sealed class CharacterRuntimeStats
         CurrentHp = Mathf.Clamp(value, 0, MaxHp);
     }
 
+    public void AddAttackModifier(int delta)
+    {
+        Attack = Mathf.Max(0, Attack + delta);
+    }
+
     public void AddDefenseModifier(int delta)
     {
         Defense = Mathf.Max(0, Defense + delta);
+    }
+
+    public void AddCriticalRateModifier(float deltaPercentPoints)
+    {
+        CriticalRate = CharacterDataBase.ClampRate(CriticalRate + deltaPercentPoints);
+    }
+
+    public void AddCriticalDamageModifier(float delta)
+    {
+        CriticalDamage = Mathf.Max(0f, CriticalDamage + delta);
+    }
+
+    public void AddBlockRateModifier(float deltaPercentPoints)
+    {
+        BlockRate = CharacterDataBase.ClampRate(BlockRate + deltaPercentPoints);
+    }
+
+    public void AddDodgeRateModifier(float deltaPercentPoints)
+    {
+        DodgeRate = CharacterDataBase.ClampRate(DodgeRate + deltaPercentPoints);
     }
 
     public void AddEscapeRateModifier(float deltaPercent)
